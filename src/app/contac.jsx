@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
+import Layout from './layout';
 
 export default function Contac() {
   const {id} = useParams()
@@ -15,10 +16,12 @@ export default function Contac() {
 
   if(data.limiter) return <div>data Limiter</div>
     return (
-    <div className='flex justify-center items-center p-4'>
+   <Layout>
+     <div className='flex justify-center items-center p-4'>
     <p>id : {id}</p>
     <div>Github : {data.login}</div>
     <img src={data.avatar_url} width={100} height={100} alt='....'/>
     </div>
+   </Layout>
   )
 }

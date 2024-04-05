@@ -1,26 +1,33 @@
 import React, { Children } from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
+import App from './app/App.jsx'
+import './assets/index.css'
 import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
 import Contac from './app/contac.jsx';
+import ProjectApp from './app/projectApp.jsx';
+import Blog from './app/blog.jsx';
+import BlogParams from './app/paramsApps/blogParams.jsx';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <div>Hello world! <a href='/contact/dodokjr'>Dodokjr</a></div>,
+    element: <App/>,
+  },
+  {
+    path: "/project",
+    element: <ProjectApp/>
+  },
+  {
+    path: "/blog",
+    element: <Blog/>
   },
   {
       path: "/contact/:id",
       element: <Contac/>
   },
-  {
-    path: "/contact/:id/:name",
-    element: <App/>
-  }
   
 ]);
 

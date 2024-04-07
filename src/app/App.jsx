@@ -24,7 +24,7 @@ function App() {
   if(!data) return <div className='text-center'>api not respons, plese call me : <a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a></div>
   return (
     <Layout >
-      <motion.div animate={{x : 100}} initial={{x: 0}}  className="diff aspect-[16/9] animate__animated animate__bounce">
+      <div  className="diff aspect-[16/9]">
         <div className="diff-item-1">
           <div className="bg-white text-blue-600 text-9xl font-black grid place-content-center">Mfikria</div>
         </div>
@@ -32,7 +32,7 @@ function App() {
           <div className="bg-blue-600 text-9xl font-black text-white grid place-content-center">Mfikria</div>
         </div>
       <div className="diff-resizer"></div>
-    </motion.div>
+    </div>
     <Home data={data}/>
     <CardCode code={data}/>
     <TimeLine/>

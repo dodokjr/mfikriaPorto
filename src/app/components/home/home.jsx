@@ -5,6 +5,7 @@ import Type from './type'
 export default function Home({data}) {
     if(!data) return null
     let size = 25;
+    
   return (
     <section id="home" className="pt-36 dark:bg-dark scale-down-center">
     <div className="container">

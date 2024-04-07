@@ -10,6 +10,8 @@ import Contac from './app/contac.jsx';
 import ProjectApp from './app/projectApp.jsx';
 import Blog from './app/blog.jsx';
 import BlogParams from './app/paramsApps/blogParams.jsx';
+import NotFound from './app/notFound.jsx';
+import NoInternetConnection from './app/noInternetConnection.jsx';
 
 const router = createBrowserRouter([
   {
@@ -28,11 +30,17 @@ const router = createBrowserRouter([
       path: "/contact/:id",
       element: <Contac/>
   },
+  {
+    path: "*",
+    element: <NotFound/>
+  },
   
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <NoInternetConnection>
     <RouterProvider router={router} />
+    </NoInternetConnection>
   </React.StrictMode>,
 )

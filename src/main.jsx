@@ -12,6 +12,7 @@ import Blog from './app/blog.jsx';
 import BlogParams from './app/paramsApps/blogParams.jsx';
 import NotFound from './app/notFound.jsx';
 import NoInternetConnection from './app/noInternetConnection.jsx';
+import { ProjectParams } from './app/paramsApps/projectParams.jsx';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       path: "/contact/:id",
       element: <Contac/>
   },
+  {
+    path: "/project/:id",
+    element: <ProjectParams/>
+},
   {
     path: "*",
     element: <NotFound/>

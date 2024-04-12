@@ -17,9 +17,10 @@ export default function CardRepos({api}) {
                 <span className='text-white btn'>Wacth : {r.watchers_count} <FaEye size={15}/></span>
                 <span className='text-white btn'>forks: {r.forks_count} <FaCodeFork size={15}/></span>
                 <span className='text-white btn'>Size: {r.size}mb <FaFileCode size={15}/></span>
-                <span className='text-white btn'>Code: {r.language} <FaCode size={15}/></span>
+                {r.language ? <span className='text-white btn'>Code: {r.language} <FaCode size={15}/></span> : null}
                 <hr/>
                 <a href={r.svn_url} target='_blank' className='py-3 px-2 text-white font-bold border border-white btn'><FaGithub/>Github</a>
+                <a href={`/project/${r.name}`} className='py-3 px-2 text-white font-bold border border-white btn'>{r.name}</a>
                 {r.homepage ? <a href={r.homepage} target='_blank' className='py-3 px-2 text-white font-bold border border-white btn'>HomePage</a> : null}
                 <div className='p-2'>
                     Create At : {format(new Date(r.created_at), "dd MMMM yyyy")},

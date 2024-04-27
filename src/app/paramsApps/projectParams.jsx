@@ -35,8 +35,6 @@ export const ProjectParams = () => {
   }
 
   if(data.message || events.message) return <div>data yang anda maksud {id} tidak ada</div>
-
-  console.log("...")
     return (
     <Layout>
         <div className='p-8'>

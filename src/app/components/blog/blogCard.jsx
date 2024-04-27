@@ -1,15 +1,9 @@
 import React from 'react'
 
-export default function BlogHome({api}) {
+export default function BlogCard({api}) {
   return (
-    <div className="bg-white dark:bg-gray-900">
-  <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
-      <div className="mx-auto max-w-screen-sm text-center lg:mb-16 mb-8">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Our Blog</h2>
-          <p className="font-light text-gray-500 sm:text-xl dark:text-gray-400">We use an agile approach to test assumptions and connect with the needs of your audience early and often.</p>
-      </div> 
-      <div className='grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8'>
-        {api.data && api.data.blog.map((r,i) => {
+    <div className='grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8'>
+        {api.data && api.data.map((r,i) => {
             return(
            <article className="relative overflow-hidden rounded-lg shadow transition hover:shadow-lg" id={r.id} key={i}>
   <img
@@ -24,7 +18,7 @@ export default function BlogHome({api}) {
         <h3 className="mt-0.5 text-lg text-white">{r.title}</h3>
       </a>
       <p className="mt-2 line-clamp-3 text-sm/relaxed text-white/95">
-        {r.descriptions}
+        {r.subtitle}
       </p>
     </div>
   </div>
@@ -32,7 +26,5 @@ export default function BlogHome({api}) {
             )
         })}
     </div>
-  </div>
-</div>
   )
 }

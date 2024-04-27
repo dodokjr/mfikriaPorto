@@ -13,6 +13,7 @@ import BlogParams from './app/paramsApps/blogParams.jsx';
 import NotFound from './app/notFound.jsx';
 import NoInternetConnection from './app/noInternetConnection.jsx';
 import { ProjectParams } from './app/paramsApps/projectParams.jsx';
+import MyHobbies from './app/myHobbies.jsx';
 
 const router = createBrowserRouter([
   {
@@ -28,12 +29,20 @@ const router = createBrowserRouter([
     element: <Blog/>
   },
   {
+    path: "/blog/:id",
+    element: <BlogParams/>
+  },
+  {
       path: "/contact/:id",
       element: <Contac/>
   },
   {
     path: "/project/:id",
     element: <ProjectParams/>
+},
+{
+  path: "/hobbies",
+  element: <MyHobbies />
 },
   {
     path: "*",

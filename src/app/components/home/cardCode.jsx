@@ -51,7 +51,7 @@ export default function CardCode() {
       <div className="grid md:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-4 px-4">
       {code.map((r,i) => {
     return(
-      <div  className='card border border-spacing-2 rounded-md scale-up-center' key={r.id}>
+      <div  className='card rounded-md scale-up-center' key={r.id}>
     <p className='card-title justify-center'>{r.title}</p>
     <div className='card-body'>
       <img src={r.img_src} alt='...' className=''/>

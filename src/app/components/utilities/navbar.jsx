@@ -4,7 +4,7 @@ import axios from "axios"
 const nav = {
   logo: "mfikria",
   img_src: "aaaaaaaa",
-  menubar: [{ name: "home", url: "/" }, { name: "Project", url: "/Project" }, {name: "Blog", url:"/blog"}],
+  menubar: [{ name: "home", url: "/" }, { name: "Project", url: "/Project" }, {name: "Blog", url:"/blog"}, {name:"My hobbies", url:"/hobbies"}],
   github_button: {
       name: "Github/Dodokjr",
       url: "https://github.com/dodokjr"

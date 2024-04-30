@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { FaGithub, FaInstagram } from "react-icons/fa6";
+import { FaArrowAltCircleUp } from "react-icons/fa";
 
 const Footer = () => {
+    const isBrowser = () => typeof window !== 'undefined';
+    const scrollToTop = () => {
+        if(!isBrowser()) return;
+        window.scrollTo({
+            top:0,
+            behavior: "smooth"
+        })
+    }
     let date = new Date();
     let year = date.getFullYear();
     return(
@@ -11,7 +19,7 @@ const Footer = () => {
                     <a href={"/"}>Mfikria </a>
                     <ul className="flex flex-wrap items-center mb-6 text-sm font-medium sm:mb-0">
                         <li>
-                            <a href="#" className="hover:underline hover:text-color-gray me-4 md:me-6">Link</a>
+                            <button onClick={scrollToTop} className="hover:underline hover:text-color-gray me-4 md:me-6"><FaArrowAltCircleUp size={22}/></button>
                         </li>
                     </ul>
                 </div>

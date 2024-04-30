@@ -10,6 +10,7 @@ import CardCode from './components/home/cardCode';
 import TimeLine from './components/home/timeLine';
 import HomeProject from './components/project/homeProject';
 import BlogHome from './components/blog/blogHome';
+import Contac from './components/utilities/contac';
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
     <TimeLine/>
     <HomeProject api={data}/>
     <BlogHome api={data}/>
+    <Contac api={data}/>
     </Layout>
   )
 }

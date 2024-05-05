@@ -19,13 +19,13 @@ export default function Home({data}) {
           <a href="mailto:ffikri604@gmail.com" className="rounded-full bg-primary py-3 px-8 text-base font-semibold text-white transition duration-300 ease-in-out hover:opacity-80 hover:shadow-lg">Hubungi Saya</a>
         <div className='flex flex-col'>
         <div className='grid grid-cols-7 px-7 py-7'>
-            <a href={data.data.media_sosial.github} className=''><FaGithub size={size}/></a>
-            <a href={data.data.media_sosial.instagram}><FaInstagram size={size}/></a>
-            <a href={data.data.media_sosial.youtube}><FaYoutube size={size}/></a>
-            <a href={data.data.media_sosial.linkedin}><FaLinkedin size={size}/></a>
-            <a href={data.data.media_sosial.discord}><FaDiscord size={size}/></a>
-            <a href={data.data.media_sosial.steam}><FaSteam size={size}/></a>
-            <a href={data.data.media_sosial.twitter}><FaTwitter size={size}/></a>
+            <a href={data.data.media_sosial.github} target='_blank'><FaGithub size={size}/></a>
+            <a href={data.data.media_sosial.instagram} target='_blank'><FaInstagram size={size}/></a>
+            <a href={data.data.media_sosial.youtube} target='_blank'><FaYoutube size={size}/></a>
+            <a href={data.data.media_sosial.linkedin} target='_blank'><FaLinkedin size={size}/></a>
+            <a href={data.data.media_sosial.discord} target='_blank'><FaDiscord size={size}/></a>
+            <a href={data.data.media_sosial.steam} target='_blank'><FaSteam size={size}/></a>
+            <a href={data.data.media_sosial.twitter} target='_blank'><FaTwitter size={size}/></a>
         </div>
         </div>
         </div>

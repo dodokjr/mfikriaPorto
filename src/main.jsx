@@ -14,6 +14,8 @@ import NotFound from './app/notFound.jsx';
 import NoInternetConnection from './app/noInternetConnection.jsx';
 import { ProjectParams } from './app/paramsApps/projectParams.jsx';
 import MyHobbies from './app/myHobbies.jsx';
+import Link from './app/link.jsx';
+import CvPdf from "./assets/documents/cv.pdf"
 
 const router = createBrowserRouter([
   {
@@ -44,6 +46,10 @@ const router = createBrowserRouter([
   path: "/hobbies",
   element: <MyHobbies />
 },
+{
+  path: "/link",
+  element: <Link/>
+},
   {
     path: "*",
     element: <NotFound/>
@@ -57,4 +63,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <RouterProvider router={router} />
     </NoInternetConnection>
   </React.StrictMode>,
+
 )

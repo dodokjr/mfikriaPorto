@@ -6,7 +6,6 @@ import { motion, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import Layout from './layout';
 import Home from './components/home/home';
-import CardCode from './components/home/cardCode';
 import TimeLine from './components/home/timeLine';
 import HomeProject from './components/project/homeProject';
 import BlogHome from './components/blog/blogHome';

@@ -2,6 +2,7 @@ import React,{useEffect, useState, useRef} from 'react'
 import emailjs from'@emailjs/browser'
 import { FaLocationDot,FaPhone,FaXTwitter,FaLinkedinIn, FaFacebookF, FaInstagram } from "react-icons/fa6";
 import { IoMail } from "react-icons/io5";
+import { BiErrorAlt } from "react-icons/bi";
 
 
 export default function Contac({api}) {
@@ -102,7 +103,23 @@ export default function Contac({api}) {
                             to hear from you
                         </p>
 
-                        {message ? <div>Tolong di isi yaa !!!</div> : null}
+                        {message ? 
+                        <div className="bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <BiErrorAlt size={29} className='text-red-700'/>
+      </div>
+      <div class="ms-3">
+        <h3 class="text-gray-800 font-semibold dark:text-white">
+          Error!
+        </h3>
+        <p class="text-sm text-gray-700 dark:text-neutral-400">
+        Please fill in the message, no spaces!!!!
+        </p>
+      </div>
+    </div>
+  </div>
+ : null}
                         <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
                             <div className="flex-1">
                                 <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Full Name</label>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { FaGithub, FaInstagram, FaTwitter, FaYoutube, FaLinkedin, FaSteam, FaDiscord } from "react-icons/fa";
 import Type from './type'
 import PP from"../../../assets/pp.jpeg"
+import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Home({data}) {
     if(!data) return null
@@ -19,13 +20,13 @@ export default function Home({data}) {
           <a href="mailto:ffikri604@gmail.com" className="rounded-full bg-primary py-3 px-8 text-base font-semibold text-white transition duration-300 ease-in-out hover:opacity-80 hover:shadow-lg">Hubungi Saya</a>
         <div className='flex flex-col'>
         <div className='grid grid-cols-7 px-7 py-7'>
-            <a href={data.data.media_sosial.github} target='_blank'><FaGithub size={size}/></a>
-            <a href={data.data.media_sosial.instagram} target='_blank'><FaInstagram size={size}/></a>
-            <a href={data.data.media_sosial.youtube} target='_blank'><FaYoutube size={size}/></a>
-            <a href={data.data.media_sosial.linkedin} target='_blank'><FaLinkedin size={size}/></a>
-            <a href={data.data.media_sosial.discord} target='_blank'><FaDiscord size={size}/></a>
-            <a href={data.data.media_sosial.steam} target='_blank'><FaSteam size={size}/></a>
-            <a href={data.data.media_sosial.twitter} target='_blank'><FaTwitter size={size}/></a>
+            <a href={data.data.media_sosial.github} target='_blank' className='mx-1.5 text-white transition-colors duration-300 transform hover:text-gray-400'><FaGithub size={size}/></a>
+            <a href={data.data.media_sosial.instagram} target='_blank'  className='mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500'><FaInstagram size={size}/></a>
+            <a href={data.data.media_sosial.youtube} target='_blank'  className='mx-1.5 text-white transition-colors duration-300 transform hover:text-red-600'><FaYoutube size={size}/></a>
+            <a href={data.data.media_sosial.linkedin} target='_blank'  className='mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500'><FaLinkedin size={size}/></a>
+            <a href={data.data.media_sosial.discord} target='_blank'  className='mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-400'><FaDiscord size={size}/></a>
+            <a href={data.data.media_sosial.steam} target='_blank' className='mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-700'><FaSteam size={size}/></a>
+            <a href={data.data.media_sosial.twitter} target='_blank' className='mx-1.5 text-white transition-colors duration-300 transform hover:text-gray-500'><FaXTwitter size={size}/></a>
         </div>
         </div>
         </div>

@@ -17,6 +17,7 @@ export default function MyHobbies() {
       setDataIg(data)
     } catch(error){console.error("data No fetch", error)}
   }
+  if(!dataIg) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a></div>
   return (
     <Layout>
         <Benner/>

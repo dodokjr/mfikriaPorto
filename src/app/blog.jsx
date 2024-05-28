@@ -14,6 +14,8 @@ export default function Blog() {
     const res = await api.json()
     setData(res)
   }
+
+  if(!data) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a></div>
   return (
     <Layout>
 <header className="p-2">

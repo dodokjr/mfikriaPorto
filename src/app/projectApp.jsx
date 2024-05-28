@@ -15,6 +15,7 @@ export default function ProjectApp() {
     .catch(err => setErr(err))
   }, [])
   if(data.mesagge) return <div>Error Page</div>
+  if(!data) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a></div>
 
   const ThemeInput = {
     light: ['#fff', "#fff", "#fff", "#fff", "#fff"],

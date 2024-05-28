@@ -15,9 +15,7 @@ export default function Contac({api}) {
     {
       const keyword = inputValue.current.value;
       if(!keyword || !keyword.trim()){
-        return(
-            setMessage(true)
-        )
+       return
       }
       if(e.key == 'Enter' || e.type === 'click'){
         e.preventDefault();
@@ -39,7 +37,6 @@ export default function Contac({api}) {
             }
           );  
       }
-      
     };
   return ( 
     <section className="min-h-screen bg-cover " style={{backgroundImage: `url('https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80')`}}>
@@ -66,7 +63,7 @@ export default function Contac({api}) {
 
                     <p class="flex items-start -mx-2">
                         <IoMail size={19} className='w-6 h-6 mx-2 text-white'/>
-                        <span class="mx-2 text-white truncate w-72">ffikri604@hmail.com</span>
+                        <a href='mailto:ffikri604@gmail.com'><span class="mx-2 text-white truncate w-72">ffikri604@gmail.com</span></a>
                     </p>
                 </div>
 
@@ -103,45 +100,8 @@ export default function Contac({api}) {
                             to hear from you
                         </p>
 
-                        {message ? 
-                        <div className="bg-red-50 border-s-4 border-red-500 p-4 dark:bg-red-800/30" role="alert">
-    <div className="flex">
-      <div className="flex-shrink-0">
-        <BiErrorAlt size={29} className='text-red-700'/>
-      </div>
-      <div class="ms-3">
-        <h3 class="text-gray-800 font-semibold dark:text-white">
-          Error!
-        </h3>
-        <p class="text-sm text-gray-700 dark:text-neutral-400">
-        Please fill in the message, no spaces!!!!
-        </p>
-      </div>
-    </div>
-  </div>
- : null}
-                        <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
-                            <div className="flex-1">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Full Name</label>
-                                <input type="text" name='name' ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
-                            </div>
 
-                            <div className="flex-1 mt-6">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Email address</label>
-                                <input type="email" name='email' ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
-                            </div>
-
-                            <div className="w-full mt-6">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Message</label>
-                                <textarea name="message" className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
-                            </div>
-
-                            <button onClick={handleSubmit} className="w-full px-6 py-3 mt-6 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-400 focus:ring-opacity-50">
-                                get in touch
-                            </button>
-                        </form>
-                        <div className='p-2 flex justify-center'>
-                        {notif && <div className="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
+{notif && <div className="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
     <div className="flex items-center justify-center w-12 bg-emerald-500">
         <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z" />
@@ -170,6 +130,28 @@ export default function Contac({api}) {
             </div>
         </div>
     </div>}
+                        <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
+                            <div className="flex-1">
+                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Full Name</label>
+                                <input type="text" name='name' ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
+                            </div>
+
+                            <div className="flex-1 mt-6">
+                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Email address</label>
+                                <input type="email" name='email' ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
+                            </div>
+
+                            <div className="w-full mt-6">
+                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Message</label>
+                                <textarea name="message" className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
+                            </div>
+
+                            <button onClick={handleSubmit} className="w-full px-6 py-3 mt-6 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-400 focus:ring-opacity-50">
+                                get in touch
+                            </button>
+                        </form>
+                        <div className='p-2 flex justify-center'>
+                        
                         </div>
                     </div>
                 </div>

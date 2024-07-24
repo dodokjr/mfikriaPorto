@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 export default function Link() {
     const [data, setData] = useState([])
 
-
     useEffect(() => {
         fetchData()
     }, [])
@@ -28,7 +27,7 @@ export default function Link() {
             <p className="text-center">Media Sosial</p>
             {data.link_one && data.link_one.map((r,i) => {
                 return(
-                    <a key={i} className="inline-flex items-center px-3 py-2 font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-full zoom-1" href={`${r.href}`} target="_blank" rel="nofollow" title="Github">
+                    <a key={i} className="inline-flex items-center px-3 py-2 font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-full zoom-1" href={`${r.href}`} target="_blank" rel="nofollow" title={r.title}>
                     {r.title}
                   </a>
                 )

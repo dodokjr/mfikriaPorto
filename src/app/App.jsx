@@ -1,9 +1,4 @@
 import { useEffect, useState } from 'react'
-import reactLogo from '../assets/react.svg'
-import viteLogo from '/vite.svg'
-import '../assets/App.css'
-import { motion, useAnimation } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import Layout from './layout';
 import Home from './components/home/home';
 import TimeLine from './components/home/timeLine';

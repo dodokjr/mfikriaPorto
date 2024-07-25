@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { FaGithub, FaInstagram, FaTwitter, FaYoutube, FaLinkedin, FaSteam, FaDiscord } from "react-icons/fa";
 import Type from './type'
-import PP from"../../../assets/pp.jpeg"
+import PP from"../../../assets/documents/pp_merah_new.jpg"
 import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Home({data}) {

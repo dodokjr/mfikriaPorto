@@ -35,6 +35,7 @@ export default function HomeProject({api}) {
                     <a className="mt-2 text-lg tracking-wider text-blue-400 uppercase " href="/project">Project ++</a>
                 </div>
             </div>
+            
         </div>
     </div>
     </section>

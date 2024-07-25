@@ -18,7 +18,7 @@ const Footer = () => {
                 <div className="sm:flex sm:items-center sm:justify-between">
                     <a href={"/"}>Mfikria </a>
                     <ul className="flex flex-wrap items-center mb-6 text-sm font-medium sm:mb-0">
-                        <li>
+                        <li className="items-end">
                             <button onClick={scrollToTop} className="hover:underline hover:text-color-gray me-4 md:me-6"><FaArrowAltCircleUp size={22}/></button>
                         </li>
                     </ul>

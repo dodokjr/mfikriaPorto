@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import '../assets/App.css'
 import Layout from './layout';
 import Home from './components/home/home';
 import TimeLine from './components/home/timeLine';

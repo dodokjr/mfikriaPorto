@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Layout from './layout'
 import Benner from './components/myHobbies/benner'
 import InstagramFeed from './components/myHobbies/instagramFeed'
+import Music from './components/myHobbies/music'
 
 export default function MyHobbies() {
   const [dataIg, setDataIg] = useState([])
@@ -22,6 +23,8 @@ export default function MyHobbies() {
     <Layout>
         <Benner/>
         <InstagramFeed api={dataIg.data && dataIg.data}/>
+        <div>Music Distro</div>
+        <Music/>
     </Layout>
   )
 }

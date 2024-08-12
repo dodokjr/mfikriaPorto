@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { format } from 'date-fns';
 import Layout from '../layout'
 import { FaHtml5 } from "react-icons/fa";
+import NotFound from '../notFound';
 
 export const ProjectParams = () => {
   const {id} = useParams()
@@ -34,7 +35,7 @@ export const ProjectParams = () => {
     }
   }
 
-  if(data.message || events.message) return <div>data yang anda maksud {id} tidak ada</div>
+  if(data.message || events.message) return <NotFound/>
     return (
     <Layout>
         <div className='p-8'>

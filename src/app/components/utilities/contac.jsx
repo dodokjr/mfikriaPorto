@@ -7,20 +7,71 @@ import { BiErrorAlt } from "react-icons/bi";
 
 export default function Contac({api}) {
     const inputValue = useRef()
-    const [message, setMessage] = useState(false);
+    const [fields, setFields] = useState({});
+    const [errors, setErrors] = useState({});
     const [notif, setNotif] = useState(false);
     const [errNotif, setErrNotif] = useState(false);
     const formRef = useRef();
+
+    const handleValidation = () => {
+        const formFields = {...fields};
+        const formErrors = {};
+        let formIsValid = true;
+
+        // name
+      if(!formFields["name"]){
+        formIsValid = false;
+        formErrors["name"] = "Cannot be empty";  
+      }
+
+      if(typeof formFields["name"] !== "undefined") {
+        if(!formFields["name"].match(/^[a-zA-Z]+$/)) {
+            formIsValid = false;
+            formErrors["email"] = "Only letters"
+        }
+      }
+
+        //email
+
+        if(!formFields["email"]){
+            formIsValid = false;
+            formErrors["email"] = "Cannot be empty";  
+          }
+
+          if(typeof formFields["email"] !== "undefined"){
+            let lastAtPos = formFields["email"].lastIndexOf('@');
+            let lastDotPos = formFields["email"].lastIndexOf('.');
+      
+            if (!(lastAtPos < lastDotPos && lastAtPos > 0 && formFields["email"].indexOf('@@') == -1 && lastDotPos > 2 && (fields["email"].length - lastDotPos) > 2)) {
+              formIsValid = false;
+              formFields["email"] = "Email is not valid";
+            }
+          }
+          
+        //message
+        
+        if(!formFields["message"]){
+            formIsValid = false;
+            formErrors["message"] = "Cannot be empty";  
+        }
+        setErrors(formErrors)
+        return formIsValid;
+    }
+    
+    const handleChange = (field, value) => {
+        setFields({
+          ...fields,
+          [field]: value
+        })
+      }
+
     const handleSubmit = (e) =>
     {
       const keyword = inputValue.current.value;
-      if(!keyword || !keyword.trim()){
-       return
-      }
       if(e.key == 'Enter' || e.type === 'click'){
         e.preventDefault();
-        setMessage(true);
-        emailjs
+        if(handleValidation()) {
+            emailjs
           .sendForm(
             'service_19cu8fs',
             'template_aggqz48',
@@ -35,7 +86,8 @@ export default function Contac({api}) {
             (Error) => {
                 setErrNotif(true)
             }
-          );  
+          ); 
+        } 
       }
     };
   return ( 
@@ -133,17 +185,20 @@ export default function Contac({api}) {
                         <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
                             <div className="flex-1">
                                 <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Full Name</label>
-                                <input type="text" name='name' ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
+                                <span className="text-red-500">{errors["name"]}</span>
+                                <input type="name" name='name' onChange={e => handleChange('name', e.target.value)} value={fields["name"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
                             </div>
 
                             <div className="flex-1 mt-6">
                                 <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Email address</label>
-                                <input type="email" name='email' ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
+                                <span className="text-red-500 gap-2">{errors["email"]}</span>
+                                <input type="email" name='email' onChange={e => handleChange('email', e.target.value)} value={fields["email"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
                             </div>
 
                             <div className="w-full mt-6">
                                 <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Message</label>
-                                <textarea name="message" className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
+                                <span className="text-red-500 gap-2">{errors["message"]}</span>
+                                <textarea name="message" onChange={e => handleChange('message', e.target.value)} value={fields["message"]} className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
                             </div>
 
                             <button onClick={handleSubmit} className="w-full px-6 py-3 mt-6 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-400 focus:ring-opacity-50">

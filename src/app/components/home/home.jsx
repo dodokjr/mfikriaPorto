@@ -17,7 +17,11 @@ export default function Home({data}) {
           <h2 className="mb-5 text-lg font-medium text-secondary lg:text-2xl">💻__<span className="text-dark dark:text-white"> <Type/></span></h2>
           <p className="mb-10 font-medium leading-relaxed text-secondary">{data.data.about} : <span className="text-dark dark:text-white">{data.data.code}</span> {data.data.about_and} <span className="text-dark dark:text-white">{data.data.skill}</span></p>
           <img align="right" src="https://komarev.com/ghpvc/?username=dodokjr&label=Visitors&color=2836F0&style=flat" alt="Profile visitor" />
-          <a href="mailto:ffikri604@gmail.com" className="rounded-full bg-primary py-3 px-8 text-base font-semibold text-white transition duration-300 ease-in-out hover:opacity-80 hover:shadow-lg">Hubungi Saya</a>
+          <a href="mailto:ffikri604@gmail.com" className="relative px-6 py-3 font-bold text-white rounded-lg group">
+<span className="absolute inset-0 w-full h-full transition duration-300 transform -translate-x-1 -translate-y-1 bg-purple-800 ease opacity-80 group-hover:translate-x-0 group-hover:translate-y-0"></span>
+<span className="absolute inset-0 w-full h-full transition duration-300 transform translate-x-1 translate-y-1 bg-pink-800 ease opacity-80 group-hover:translate-x-0 group-hover:translate-y-0 mix-blend-screen"></span>
+<span className="relative">contact me</span>
+</a>
         <div className='flex flex-col'>
         <div className='grid grid-cols-7 px-7 py-7'>
             <a href={data.data.media_sosial.github} target='_blank' className='mx-1.5 text-white transition-colors duration-300 transform hover:text-gray-400'><FaGithub size={size}/></a>

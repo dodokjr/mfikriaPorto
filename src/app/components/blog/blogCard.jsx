@@ -15,7 +15,7 @@ export default function BlogCard({api}) {
     <div className="p-4 sm:p-6">
       <span className="block text-xs text-white/90"> {r.postBy.time} </span>
       <a href={`blog/${r.slug}`}>
-        <h3 className="mt-0.5 text-lg text-white">{r.title}</h3>
+        <h3 className="mt-0.5 text-lg text-white hover:text-pink-500">{r.title}</h3>
       </a>
       <p className="mt-2 line-clamp-3 text-sm/relaxed text-white/95">
         {r.subtitle}

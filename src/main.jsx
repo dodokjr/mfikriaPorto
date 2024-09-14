@@ -19,7 +19,7 @@ import CvPdf from "./assets/documents/cv.pdf"
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/app",
     element: <App/>,
   },
   {
@@ -47,7 +47,7 @@ const router = createBrowserRouter([
   element: <MyHobbies />
 },
 {
-  path: "/link",
+  path: "/fkri__17",
   element: <Link/>
 },
   {

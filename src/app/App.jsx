@@ -17,7 +17,7 @@ function App() {
     .catch(error => console.error("api not respons,plese call me: ffikri604@gmail.com"))
   }, [])
 
-  if(!data) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a></div>
+  if(!data) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a> <span className="loading loading-dots loading-lg"></span></div>
   return (
     <Layout >
       <div  className="diff aspect-[16/9]">

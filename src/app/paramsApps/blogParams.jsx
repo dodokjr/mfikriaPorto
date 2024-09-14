@@ -18,7 +18,12 @@ export default function BlogParams() {
     if(!res) {
         return(
             <Layout>
-                <div className='flex justify-center items-center content-center'>Data No Respons</div>
+                <div className="flex w-52 flex-col gap-4">
+  <div className="skeleton h-32 w-full"></div>
+  <div className="skeleton h-4 w-28"></div>
+  <div className="skeleton h-4 w-full"></div>
+  <div className="skeleton h-4 w-full"></div>
+</div>
             </Layout>
         )
     }
@@ -41,13 +46,13 @@ export default function BlogParams() {
                     </address>
                     <h1 class="mb-4 text-3xl font-extrabold leading-tight text-gray-900 lg:mb-6 lg:text-4xl dark:text-white">{res.title}</h1>
                 </header>
-                <img src={res.img_background} alt={res.title} width={650} height={350} />
+                {res.img_background ? <img src={res.img_background} alt={res.title} width={650} height={350} /> : <div className="skeleton h-32 w-32"></div>}
                 {res.content && res.content.descriptions.map((r,i) => {
                   return(
                       <p key={i}>{r}</p>
                   )
                 })}
-                <iframe className='w-full aspect-video' src={res.content && res.content.iframe_yt} width={450} height={350} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                {res.content?.iframe_yt ? <iframe className='w-full aspect-video' src={res.content && res.content.iframe_yt} width={450} height={350} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> : <div className="skeleton h-32 w-32"></div>}
                 <strong className='font-bold text-white'>{res.content && res.content.copyright}</strong>
             </article>
         </div>

@@ -1,8 +1,14 @@
-import React from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function NotFound() {
   const params = useLocation()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if(params.pathname == "/") {
+      navigate("/app")
+    }
+  })
     return (
         <div className='px-9 py-8' >
             <div className="text-center">

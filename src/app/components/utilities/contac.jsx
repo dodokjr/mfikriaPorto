@@ -183,27 +183,48 @@ export default function Contac({api}) {
         </div>
     </div>}
                         <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
-                            <div className="flex-1">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Full Name</label>
-                                <span className="text-red-500">{errors["name"]}</span>
-                                <input type="name" name='name' onChange={e => handleChange('name', e.target.value)} value={fields["name"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
+                        <div className="flex-1">
+                            <label className="form-control w-full max-w-xs">
+                            <div className="label">
+                            <span className="label-text">What is your name?</span>
+                            <span className="label-text-alt text-red-500">{errors["name"]}</span>
                             </div>
+                            <input type="name" name='name' onChange={e => handleChange('name', e.target.value)} value={fields["name"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
+                            </label>
+                        </div>
 
-                            <div className="flex-1 mt-6">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Email address</label>
-                                <span className="text-red-500 gap-2">{errors["email"]}</span>
-                                <input type="email" name='email' onChange={e => handleChange('email', e.target.value)} value={fields["email"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
+                        <div className="flex-1 mt-6">
+                        <label className="form-control w-full max-w-xs">
+                            <div className="label">
+                            <span className="label-text">Email address</span>
+                            <span className="label-text-alt text-red-500">{errors["email"]}</span>
                             </div>
+                            <input type="email" name='email' onChange={e => handleChange('email', e.target.value)} value={fields["email"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
+                        </label>
+                        </div>
 
                             <div className="w-full mt-6">
-                                <label className="block mb-2 text-sm text-gray-600 dark:text-gray-200">Message</label>
-                                <span className="text-red-500 gap-2">{errors["message"]}</span>
-                                <textarea name="message" onChange={e => handleChange('message', e.target.value)} value={fields["message"]} className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
+                            <label className="form-control w-full max-w-xs">
+                            <div className="label">
+                            <span className="label-text">Message</span>
+                            <span className="label-text-alt text-red-500">{errors["message"]}</span>
                             </div>
+                            <textarea name="message" onChange={e => handleChange('message', e.target.value)} value={fields["message"]} className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
+                        </label>
+                        </div>
 
-                            <button onClick={handleSubmit} className="w-full px-6 py-3 mt-6 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-400 focus:ring-opacity-50">
-                                get in touch
-                            </button>
+                        <div className='flex mt-6'>
+                        <button onClick={handleSubmit} className=" p-2 relative inline-flex items-center justify-start py-3 pl-4 pr-12 overflow-hidden font-semibold text-white transition-all duration-150 ease-in-out rounded hover:pl-10 hover:pr-6 group">
+                            <span className="absolute bottom-0 left-0 w-full h-1 transition-all duration-150 ease-in-out bg-indigo-600 group-hover:h-full"></span>
+                            <span className="absolute right-0 pr-4 duration-200 ease-out group-hover:translate-x-12">
+                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </span>
+                            <span className="absolute left-0 pl-2.5 -translate-x-12 group-hover:translate-x-0 ease-out duration-200">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </span>
+                            <span className="relative w-full text-left transition-colors duration-200 ease-in-out group-hover:text-white">Send</span>
+                        </button>
+                        </div>
                         </form>
                         <div className='p-2 flex justify-center'>
                         

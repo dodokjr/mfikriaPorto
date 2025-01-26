@@ -157,7 +157,7 @@ function Music() {
 
   return (
     <>
-    <div className="overflow-hidden flex justify-center p-2">
+    <div className="overflow-hidden flex justify-center p-2 text-white">
       <audio src='./Assets/songs/Chasing - NEFFEX.mp3' ref={currentAudio} onEnded={handleNextSong} onTimeUpdate={handleAudioUpdate}></audio>
       <div className="blackScreen"></div>
       <div className="music-Container">

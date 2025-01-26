@@ -16,6 +16,7 @@ import { ProjectParams } from './app/paramsApps/projectParams.jsx';
 import MyHobbies from './app/myHobbies.jsx';
 import Link from './app/link.jsx';
 import CvPdf from "./assets/documents/cv.pdf"
+import Capps from './app/components/company/Capps.jsx';
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
 {
   path: "/fkri__17",
   element: <Link/>
+},
+{
+  path: "/company",
+  element: <Capps/>
 },
   {
     path: "*",

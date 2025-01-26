@@ -3,9 +3,9 @@ import React from 'react'
 export default function InstagramFeed({api}) {
   if(!api) return <div className="skeleton h-64 w-64"></div>
   return (
-    <section className="bg-white dark:bg-gray-900">
+    <section className="bg-slate-700">
     <div className="container px-6 py-10 mx-auto">
-        <h1 className="text-2xl font-semibold text-center text-gray-800 capitalize lg:text-3xl dark:text-white">Instagram Feed
+        <h1 className="text-2xl font-semibold text-center text-white capitalize lg:text-3xl">Instagram Feed
         </h1>
         <br/>
    <div className="grid grid-cols-1 gap-4 lg:grid-cols-4 lg:gap-8">

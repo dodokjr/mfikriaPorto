@@ -14,13 +14,13 @@ export default function Navbar() {
   if(!nav) return null
   return (
     <>
-    <div className="navbar bg-base-100">
+    <div className="navbar bg-slate-800">
   <div className="navbar-start">
     <details className="dropdown">
     <summary tabIndex={0} role="button" className="btn m-1">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
     </summary>
-      <ul tabIndex={0} className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+      <ul tabIndex={0} className="menu dropdown-content bg-slate-800 rounded-box z-[1] w-52 p-2 shadow">
         {nav.menubar.map((r, index) => {
           return(
             <li key={index + 1}><a href={r.url} className='text-white hover:underline hover:text-pink-500'>{r.name}</a></li>

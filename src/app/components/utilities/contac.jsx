@@ -214,7 +214,7 @@ export default function Contac({api}) {
                         </div>
 
                         <div className='flex mt-6'>
-                        <button onClick={handleSubmit} className=" p-2 relative inline-flex items-center justify-start py-3 pl-4 pr-12 overflow-hidden font-semibold text-white transition-all duration-150 ease-in-out rounded hover:pl-10 hover:pr-6 group">
+                        <button onClick={handleSubmit} className="dark:text-white text-slate-800 p-2 relative inline-flex items-center justify-start py-3 pl-4 pr-12 overflow-hidden font-semibold text-white transition-all duration-150 ease-in-out rounded hover:pl-10 hover:pr-6 group">
                             <span className="absolute bottom-0 left-0 w-full h-1 transition-all duration-150 ease-in-out bg-indigo-600 group-hover:h-full"></span>
                             <span className="absolute right-0 pr-4 duration-200 ease-out group-hover:translate-x-12">
                             <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>

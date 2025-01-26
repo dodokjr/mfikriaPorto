@@ -13,11 +13,11 @@ export default function CardRepos({api}) {
                     <img src={r.owner.avatar_url} className='rounded-md'/>
                 <div className='card-title justify-center'>{r.name}</div>
                 <div className='font-bold'>{r.description}</div>
-                <span className='text-white btn'>Stars : {r.stargazers_count}<FaStar size={15}/></span>
-                <span className='text-white btn'>Wacth : {r.watchers_count} <FaEye size={15}/></span>
-                <span className='text-white btn'>forks: {r.forks_count} <FaCodeFork size={15}/></span>
-                <span className='text-white btn'>Size: {r.size}mb <FaFileCode size={15}/></span>
-                {r.language ? <span className='text-white btn'>Code: {r.language} <FaCode size={15}/></span> : null}
+                <span className='dark:text-white text-slate-800 btn'>Stars : {r.stargazers_count}<FaStar size={15}/></span>
+                <span className='dark:text-white text-slate-800 btn'>Wacth : {r.watchers_count} <FaEye size={15}/></span>
+                <span className='dark:text-white text-slate-800 btn'>forks: {r.forks_count} <FaCodeFork size={15}/></span>
+                <span className='dark:text-white text-slate-800 btn'>Size: {r.size}mb <FaFileCode size={15}/></span>
+                {r.language ? <span className='dark:text-white text-slate-800 btn'>Code: {r.language} <FaCode size={15}/></span> : null}
                 <hr/>
                 <a href={r.svn_url} target='_blank' className="relative inline-flex items-center justify-start inline-block px-5 py-3 overflow-hidden font-bold group">
 <span className="w-32 h-32 rotate-45 translate-x-12 -translate-y-2 absolute left-0 top-0 bg-white opacity-[3%]"></span>

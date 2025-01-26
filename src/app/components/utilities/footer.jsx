@@ -13,7 +13,7 @@ const Footer = () => {
     let date = new Date();
     let year = date.getFullYear();
     return(
-        <footer className="bg-color-accent rounded-lg shadow m-4 text-color-primary">
+        <footer className="bg-color-accent rounded-lg shadow m-4 text-color-primary text-white">
             <div className="w-full max-w-screen-xl mx-auto p-4 md:py-8">
                 <div className="sm:flex sm:items-center sm:justify-between">
                     <a href={"/"}>Mfikria </a>

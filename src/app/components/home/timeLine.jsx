@@ -2,7 +2,7 @@ import {use} from "react"
 
 export default function TimeLine() {
   return (
-    <div className='flex p-4'>
+    <div className='flex p-4 text-white'>
         <ul className="timeline timeline-snap-icon max-md:timeline-compact timeline-vertical">
   <li>
     <div className="timeline-middle">

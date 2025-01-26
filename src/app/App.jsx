@@ -6,6 +6,8 @@ import TimeLine from './components/home/timeLine';
 import HomeProject from './components/project/homeProject';
 import BlogHome from './components/blog/blogHome';
 import Contac from './components/utilities/contac';
+import Loading from './components/utilities/Loading';
+import SectionStar from './components/home/SectionStar';
 
 
 function App() {
@@ -17,7 +19,7 @@ function App() {
     .catch(error => console.error("api not respons,plese call me: ffikri604@gmail.com"))
   }, [])
 
-  if(!data) return <div className='flex  content-center justify-center items-center'>Loding 🚀🚀🚀<a href='mailto:ffikri604@gmail.com' className='btn'>ffikri604@gmail.com</a> <span className="loading loading-dots loading-lg"></span></div>
+  if(!data) return <Loading/>
   return (
     <Layout >
       <div  className="diff aspect-[16/9]">
@@ -32,6 +34,7 @@ function App() {
     <Home data={data}/>
     <TimeLine/>
     <HomeProject api={data}/>
+    <SectionStar/>
     <BlogHome api={data}/>
     <Contac api={data}/>
     </Layout>

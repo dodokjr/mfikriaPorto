@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-*{
-    margin: 0;
-    padding: 0;
-}
 
 html {
   scroll-behavior: smooth;
@@ -22,49 +18,6 @@ img {
    img:hover{
      scale: 102%;
    }
-   
-
-   
-   .preload {
-     top: 0;
-     bottom: 0;
-     width: 48px;
-     height: 48px;
-     border: 3px solid #FFF;
-     border-radius: 50%;
-     display: inline-block;
-     position: relative;
-     box-sizing: border-box;
-     animation: rotation 1s linear infinite;
-     -webkit-animation: rotation 1s linear infinite;
-}
-    .preload::after {
-      content: '';  
-      box-sizing: border-box;
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 3px solid;
-      border-color: #FF3D00 transparent;
-    }
-    
-  #preloader-none {
-    opacity: 0;
-  }
-  
-  #no-scroll {
-    overflow: hidden;
-    height: 100vh;
-  }
-
-  .yt{
-    font-size: 35px; 
-    color: #FF0000;
-  }
 
   .zoom{
     transition: transfrom 2.1 all;

@@ -16,11 +16,11 @@ export default function Layout({children}) {
   return (
     <>
       <Preload load={load}/>
-    <main className='App w-full ' id={load ? "no-scroll" : "scroll"}>
+    <div id={load ? "no-scroll" : "scroll"}>
       <Navbar />
         {children}
         <Footer/>
-    </main>
+    </div>
     </>
   )
 }

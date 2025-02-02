@@ -1,15 +1,11 @@
 import React from 'react'
+import LoadingAs from '../../../assets/documents/Mfikria.svg';
 
 export default function Loading() {
   return (
-    <div className='flex items-center justify-center content-center'>
-    <div class="spinner-3 w-10 h-10 rounded-full bg-slate-100 relative">
-        <div class="absolute w-full h-full bg-slate-100 rounded-full animate-ping"></div>
-        <div class="absolute w-full h-full bg-slate-100 rounded-full animate-ping delay-200"></div>
-      </div>
-      <div className='text-white'>
-        By <b>MFIKRIA</b>
-      </div>
-    </div>
+      <div class="relative h-screen flex justify-center items-center">
+    <div class="absolute animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-purple-500"></div>
+    <img src={LoadingAs}  class="rounded-full h-36 w-36" />
+</div>
   )
 }

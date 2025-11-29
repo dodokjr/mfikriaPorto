@@ -73,7 +73,7 @@ export default function Contac({api}) {
         if(handleValidation()) {
             emailjs
           .sendForm(
-            'service_19cu8fs',
+            'service_ru3f035',
             'template_aggqz48',
             formRef.current,
             'tVJhXv51XVHIQind4'

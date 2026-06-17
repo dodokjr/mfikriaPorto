@@ -12,7 +12,7 @@ export default function CardRepos({api}) {
                 <div className='card-body'>
                     <img src={r.owner.avatar_url} className='rounded-md'/>
                 <div className='card-title justify-center text-white'>{r.name}</div>
-                <div className='font-bold text-white'>{r.description}</div>
+                <span><div className='font-bold text-white justify-center text-center'>{r.description}</div></span>
                 <span className='dark:text-white text-slate-800 btn'>Stars : {r.stargazers_count}<FaStar size={15}/></span>
                 <span className='dark:text-white text-slate-800 btn'>Wacth : {r.watchers_count} <FaEye size={15}/></span>
                 <span className='dark:text-white text-slate-800 btn'>forks: {r.forks_count} <FaCodeFork size={15}/></span>
@@ -39,6 +39,7 @@ export default function CardRepos({api}) {
 </a> : null}
                 <div className='p-2 '>
                     <span className='text-white'>Create At : {format(new Date(r.created_at), "dd MMMM yyyy")}</span>
+                   <br />
                    <span className='text-white'>Update At : {format(new Date(r.updated_at), "dd MMM yyyy")}</span>
                 </div>
                 </div>

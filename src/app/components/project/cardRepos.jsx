@@ -11,8 +11,8 @@ export default function CardRepos({api}) {
                 <div className='card border border-spacing-2 rounded-md scale-up-ver-bottom' key={r.id}>
                 <div className='card-body'>
                     <img src={r.owner.avatar_url} className='rounded-md'/>
-                <div className='card-title justify-center'>{r.name}</div>
-                <div className='font-bold'>{r.description}</div>
+                <div className='card-title justify-center dark:text-white'>{r.name}</div>
+                <div className='font-bold dark:text-white'>{r.description}</div>
                 <span className='dark:text-white text-slate-800 btn'>Stars : {r.stargazers_count}<FaStar size={15}/></span>
                 <span className='dark:text-white text-slate-800 btn'>Wacth : {r.watchers_count} <FaEye size={15}/></span>
                 <span className='dark:text-white text-slate-800 btn'>forks: {r.forks_count} <FaCodeFork size={15}/></span>
@@ -37,9 +37,9 @@ export default function CardRepos({api}) {
 <span className="relative w-full text-left text-white transition-colors duration-200 ease-in-out group-hover:text-gray-900">Website</span>
 <span className="absolute inset-0 border-2 border-white"></span>
 </a> : null}
-                <div className='p-2'>
-                    Create At : {format(new Date(r.created_at), "dd MMMM yyyy")},
-                    Update At : {format(new Date(r.updated_at), "dd MMM yyyy")},
+                <div className='p-2 '>
+                    <span className='dark:text-white'>Create At : {format(new Date(r.created_at), "dd MMMM yyyy")}</span>
+                   <span className='dark:text-white'>Update At : {format(new Date(r.updated_at), "dd MMM yyyy")}</span>
                 </div>
                 </div>
             </div>

@@ -27,7 +27,7 @@ export default function Contac({api}) {
       if(typeof formFields["name"] !== "undefined") {
         if(!formFields["name"].match(/^[a-zA-Z]+$/)) {
             formIsValid = false;
-            formErrors["email"] = "Only letters"
+            formErrors["name"] = "Only letters"
         }
       }
 
@@ -42,7 +42,7 @@ export default function Contac({api}) {
             let lastAtPos = formFields["email"].lastIndexOf('@');
             let lastDotPos = formFields["email"].lastIndexOf('.');
       
-            if (!(lastAtPos < lastDotPos && lastAtPos > 0 && formFields["email"].indexOf('@@') == -1 && lastDotPos > 2 && (fields["email"].length - lastDotPos) > 2)) {
+            if (!(lastAtPos < lastDotPos && lastAtPos > 0 && formFields["email"].indexOf('@') == -1 && lastDotPos > 2 && (fields["email"].length - lastDotPos) > 2)) {
               formIsValid = false;
               formFields["email"] = "Email is not valid";
             }
@@ -58,12 +58,12 @@ export default function Contac({api}) {
         return formIsValid;
     }
     
-    const handleChange = (field, value) => {
+    function handleChange(field, value) {
         setFields({
-          ...fields,
-          [field]: value
-        })
-      }
+            ...fields,
+            [field]: value
+        });
+    }
 
     const handleSubmit = (e) =>
     {

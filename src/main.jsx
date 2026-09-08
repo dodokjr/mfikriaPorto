@@ -18,6 +18,7 @@ import Link from './app/link.jsx';
 import CvPdf from "./assets/documents/cv.pdf"
 import Capps from './app/components/company/Capps.jsx';
 import ChatAi from './app/components/chatAi/ChatAi.jsx';
+import Store from './app/Store.jsx'
 
 const router = createBrowserRouter([
   {
@@ -53,12 +54,8 @@ const router = createBrowserRouter([
   element: <Link/>
 },
 {
-  path: "/company",
-  element: <Capps/>
-},
-{
-  path: "/chatAi",
-  element: <ChatAi/>
+  path: "/store",
+  element: <Store/> 
 },
   {
     path: "*",

@@ -1,63 +1,133 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import Layout from '../layout';
 
 export default function BlogParams() {
-    const {id} = useParams()
-    const [res, setRes] = useState([])
+    const { id } = useParams()
+    const [res, setRes] = useState(null)
+    const [imgLoaded, setImgLoaded] = useState(false)
 
     useEffect(() => {
         fetchData()
-    },[])
+    }, [id])
     
     const fetchData = async () => {
-        const api = await fetch(`https://api-mfikria.vercel.app/mfikria/c/blog/${id}`)
-        const data = await api.json()
-        setRes(data.data)
+        try {
+            const api = await fetch(`https://api-mfikria.vercel.app/mfikria/c/blog/${id}`)
+            const data = await api.json()
+            setRes(data.data)
+        } catch (error) {
+            console.error("Gagal memuat detail blog:", error)
+        }
     }
-    if(!res) {
-        return(
+
+    if (!res) {
+        return (
             <Layout>
-                <div className="flex w-52 flex-col gap-4">
-  <div className="skeleton h-32 w-full"></div>
-  <div className="skeleton h-4 w-28"></div>
-  <div className="skeleton h-4 w-full"></div>
-  <div className="skeleton h-4 w-full"></div>
-</div>
+                <div className="flex min-h-[70vh] items-center justify-center">
+                    <div className="flex w-full max-w-2xl flex-col gap-6 p-6">
+                        <div className="flex items-center gap-4">
+                            <div className="skeleton h-14 w-14 rounded-full"></div>
+                            <div className="flex flex-col gap-2">
+                                <div className="skeleton h-4 w-32 rounded-md"></div>
+                                <div className="skeleton h-3 w-20 rounded-md"></div>
+                            </div>
+                        </div>
+                        <div className="skeleton h-10 w-3/4 rounded-lg"></div>
+                        <div className="skeleton h-72 w-full rounded-2xl"></div>
+                        <div className="flex flex-col gap-3">
+                            <div className="skeleton h-4 w-full rounded-md"></div>
+                            <div className="skeleton h-4 w-full rounded-md"></div>
+                            <div className="skeleton h-4 w-2/3 rounded-md"></div>
+                        </div>
+                    </div>
+                </div>
             </Layout>
         )
     }
-  return (
-    <Layout>
-        <Suspense fallback={<div>Loading....</div>}>
-        <div className="pt-8 pb-16 lg:pt-16 lg:pb-24 bg-slate-800 antialiased">
-        <div className="flex justify-between px-4 mx-auto max-w-screen-xl ">
-            <article className="mx-auto w-full max-w-2xl format format-sm sm:format-base lg:format-lg format-blue dark:format-invert">
-                <header className="mb-4 lg:mb-6 not-format">
-                    <address className="flex items-center mb-6 not-italic">
-                        <div className="inline-flex items-center mr-3 text-sm text-white dark:text-white">
-                        <img className="mr-4 w-16 h-16 rounded-full" src={res.postBy && res.postBy.img_profile} alt="Jese Leos" />
-                            <div>
-                                <a href="#" rel="author" class="text-xl font-bold text-white dark:text-white">{res.postBy && res.postBy.creator} {id}</a>
-                                <p class="text-base text-gray-500 dark:text-gray-400">{res.postBy && res.postBy.status_creator}</p>
-                                <p class="text-base text-gray-500 dark:text-gray-400"><time>{res.time_post}</time></p>
+
+    return (
+        <Layout>
+            <main className="min-h-screen bg-gray-950 text-gray-100 py-12 md:py-20">
+                <article className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+                    
+                    {/* Header Artikel */}
+                    <header className="mb-8">
+                        {res.postBy && (
+                            <div className="flex items-center gap-4 mb-6">
+                                <img 
+                                    className="w-12 h-12 rounded-full object-cover border border-gray-800" 
+                                    src={res.postBy.img_profile} 
+                                    alt={res.postBy.creator || "Author"} 
+                                />
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-white">{res.postBy.creator}</span>
+                                        <span className="text-xs text-gray-500">•</span>
+                                        <time className="text-xs text-gray-400">{res.time_post}</time>
+                                    </div>
+                                    <p className="text-xs text-pink-500 font-medium">{res.postBy.status_creator}</p>
+                                </div>
                             </div>
+                        )}
+
+                        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
+                            {res.title}
+                        </h1>
+                    </header>
+
+                    {/* Gambar Utama dengan Skeleton */}
+                    <div className="relative w-full h-64 sm:h-96 rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 mb-10">
+                        {res.img_background ? (
+                            <>
+                                {!imgLoaded && (
+                                    <div className="absolute inset-0 skeleton w-full h-full bg-gray-800 animate-pulse"></div>
+                                )}
+                                <img
+                                    src={res.img_background}
+                                    alt={res.title}
+                                    onLoad={() => setImgLoaded(true)}
+                                    className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                            </>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-gray-600 text-sm">Tidak ada gambar</div>
+                        )}
+                    </div>
+
+                    {/* Konten Paragraf */}
+                    <div className="space-y-6 text-gray-300 text-base sm:text-lg leading-relaxed">
+                        {res.content?.descriptions && res.content.descriptions.map((r, i) => (
+                            <p key={i} className="text-gray-300">
+                                {r}
+                            </p>
+                        ))}
+                    </div>
+
+                    {/* Iframe YouTube Responsif */}
+                    {res.content?.iframe_yt && (
+                        <div className="mt-10 overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 aspect-video">
+                            <iframe 
+                                className="w-full h-full" 
+                                src={res.content.iframe_yt} 
+                                title="YouTube video player" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                referrerPolicy="strict-origin-when-cross-origin" 
+                                allowFullScreen
+                            ></iframe>
                         </div>
-                    </address>
-                    <h1 class="mb-4 text-3xl font-extrabold leading-tight text-white lg:mb-6 lg:text-4xl dark:text-white">{res.title}</h1>
-                </header>
-                {res.img_background ? <img src={res.img_background} alt={res.title} width={650} height={350} /> : <div className="skeleton h-32 w-32"></div>}
-                {res.content && res.content.descriptions.map((r,i) => {
-                  return(
-                      <p key={i} className='text-white'>{r}</p>
-                  )
-                })}
-                {res.content?.iframe_yt ? <iframe className='w-full aspect-video' src={res.content && res.content.iframe_yt} width={450} height={350} title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe> : <div className="skeleton h-32 w-32"></div>}
-                <strong className='font-bold text-white'>{res.content && res.content.copyright}</strong>
-            </article>
-        </div>
-      </div>
-        </Suspense>
-    </Layout>
-  )
+                    )}
+
+                    {/* Copyright / Footer Artikel */}
+                    {res.content?.copyright && (
+                        <div className="mt-12 pt-6 border-t border-gray-800/80 text-sm text-gray-500">
+                            <span>{res.content.copyright}</span>
+                        </div>
+                    )}
+
+                </article>
+            </main>
+        </Layout>
+    )
 }

@@ -1,56 +1,82 @@
-import React,{useEffect, useState} from 'react'
+import React, { useEffect, useState } from 'react'
 import Layout from './layout'
 import BlogCard from './components/blog/blogCard'
 
 export default function Blog() {
-  const [data, setData] = useState([])
+  // Ubah inisialisasi awal menjadi null agar pengecekan loading akurat
+  const [data, setData] = useState(null)
 
   useEffect(() => {
     fetchData()
   }, [])
 
   const fetchData = async () => {
-    const api = await fetch("https://api-mfikria.vercel.app/mfikria/c/blog")
-    const res = await api.json()
-    setData(res)
+    try {
+      const api = await fetch("https://api-mfikria.vercel.app/mfikria/c/blog")
+      const res = await api.json()
+      setData(res)
+    } catch (error) {
+      console.error("Gagal mengambil data blog:", error)
+    }
   }
 
-  if(!data) return <div className="flex w-52 flex-col gap-4">
-  <div className="skeleton h-32 w-full"></div>
-  <div className="skeleton h-4 w-28"></div>
-  <div className="skeleton h-4 w-full"></div>
-  <div className="skeleton h-4 w-full"></div>
-</div>
+  // Tampilan Loading (Skeleton) yang lebih rapi dan simetris di tengah
+  if (!data) {
+    return (
+      <Layout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="flex w-full max-w-md flex-col gap-4 p-4">
+            <div className="skeleton h-32 w-full rounded-xl"></div>
+            <div className="skeleton h-6 w-1/3 rounded-lg"></div>
+            <div className="skeleton h-4 w-full rounded-lg"></div>
+            <div className="skeleton h-4 w-2/3 rounded-lg"></div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
-<header className="p-2">
-  <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-    <div className="sm:flex sm:items-center sm:justify-between">
-      <div className="text-center sm:text-left">
-        <h1 className="text-2xl font-bold text-white sm:text-3xl hover:text-pink-500">Welcome To My Blog!!</h1>
-        <p className="mt-1.5 text-sm text-blue-200">My blog post!! 🎉</p>
-      </div>
-      <div className="mt-4 flex flex-col gap-4 sm:mt-0 sm:flex-row sm:items-center">
-        {data.data && data.data.map((r,i) => {
-          return(
-            <a href={`blog/${r.slug}`} key={i} className="relative inline-flex items-center justify-center p-4 px-6 py-3 overflow-hidden font-medium text-indigo-600 transition duration-300 ease-out border-2 border-purple-500 rounded-full shadow-md group">
-<span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-pink-500 group-hover:translate-x-0 ease">
-<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-</span>
-<span className="absolute flex items-center justify-center w-full h-full text-pink-500 transition-all duration-300 transform group-hover:translate-x-full ease">Blog ({r.id})</span>
-<span className="relative invisible">Blog ({r.id})</span>
-</a>
-          )
-        })}
-      </div>
-    </div>
-  </div>
-</header>
+      {/* Header Minimalis & Modern */}
+      <header className="border-b border-gray-800/40 py-12 md:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            
+            {/* Judul & Deskripsi */}
+            <div className="max-w-2xl">
+              <span className="text-xs font-semibold tracking-wider text-pink-500 uppercase">
+                Eksplorasi & Cerita
+              </span>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Welcome To My Blog
+              </h1>
+              <p className="mt-2 text-base text-gray-400">
+                Temukan berbagai artikel menarik, tips, dan pemikiran terbaru di sini. 🎉
+              </p>
+            </div>
 
-<div className='px-3'>
-  <BlogCard api={data}/>
-</div>
+            {/* Quick Navigation / Pills (Opsional jika ingin tetap ditampilkan secara minimalis) */}
+            <div className="flex flex-wrap items-center gap-2">
+              {data.data && data.data.map((r, i) => (
+                <a
+                  key={i}
+                  href={`blog/${r.slug}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-300 bg-gray-900 border border-gray-800 rounded-full transition-all duration-200 hover:border-pink-500 hover:text-white hover:bg-pink-500/10"
+                >
+                  <span>Blog #{r.id}</span>
+                </a>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </header>
+
+      {/* Konten Utama Blog Card */}
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <BlogCard api={data} />
+      </main>
     </Layout>
   )
 }
-

@@ -2,21 +2,48 @@ import React, { useState, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import { FaLocationDot, FaPhone, FaXTwitter, FaLinkedinIn, FaFacebookF, FaInstagram } from "react-icons/fa6";
 import { IoMail } from "react-icons/io5";
+import { HiCheckCircle, HiXCircle, HiExclamationCircle, HiArrowRight } from "react-icons/hi";
 
 export default function Contact({ api }) {
   const formRef = useRef();
   const [fields, setFields] = useState({ name: '', email: '', message: '' });
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null); // 'success' | 'error' | null
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message: string } | null
+  const [errors, setErrors] = useState({}); // Menyimpan status field yang kosong/invalid
 
   const handleChange = (e) => {
-    setFields({ ...fields, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFields({ ...fields, [name]: value });
+    // Hapus error saat pengguna mulai mengetik di kolom tersebut
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: false });
+    }
+  };
+
+  const showToast = (type, message) => {
+    setToast({ type, message });
+    setTimeout(() => {
+      setToast(null);
+    }, 5000);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validasi Kolom Kosong
+    const newErrors = {};
+    if (!fields.name.trim()) newErrors.name = true;
+    if (!fields.email.trim()) newErrors.email = true;
+    if (!fields.message.trim()) newErrors.message = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      showToast('error', 'Mohon lengkapi semua kolom yang kosong sebelum mengirim pesan.');
+      return;
+    }
+
     setLoading(true);
-    setStatus(null);
+    setToast(null);
 
     emailjs
       .sendForm(
@@ -27,67 +54,80 @@ export default function Contact({ api }) {
       )
       .then(
         () => {
-          setStatus('success');
+          showToast('success', 'Pesan Anda berhasil dikirim! Terima kasih telah menghubungi.');
           setFields({ name: '', email: '', message: '' });
+          setErrors({});
         },
         () => {
-          setStatus('error');
+          showToast('error', 'Gagal mengirim pesan. Silakan coba beberapa saat lagi.');
         }
       )
       .finally(() => setLoading(false));
   };
 
   return (
-    <section className="bg-slate-100/70 py-16 transition-colors duration-300 dark:bg-slate-900">
-      <div className="container mx-auto px-6">
+    <section className="bg-gray-950 py-16 transition-colors duration-300 relative">
+      
+      {/* Floating Toast Notification Modern */}
+      {toast && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-gray-900 border border-gray-800 px-5 py-4 rounded-2xl shadow-2xl animate-fade-in">
+          {toast.type === 'success' ? (
+            <HiCheckCircle className="w-6 h-6 text-emerald-400 shrink-0" />
+          ) : (
+            <HiXCircle className="w-6 h-6 text-pink-500 shrink-0" />
+          )}
+          <p className="text-xs font-semibold text-white">{toast.message}</p>
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 max-w-6xl">
         
-        {/* Header Section */}
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+        {/* Header Section Minimalis */}
+        <div className="mx-auto max-w-xl text-center mb-12">
+          <span className="text-xs font-semibold tracking-wider text-pink-500 uppercase bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">
             Get In Touch
           </span>
-          <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-white">
             Contact Me
           </h2>
-          <div className="mx-auto mt-3 h-1.5 w-16 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
-          <p className="mt-4 text-base font-medium text-slate-600 dark:text-slate-300 sm:text-lg">
-            Punya pertanyaan, tawaran proyek, atau sekadar ingin menyapa? Silakan kirim pesan Anda di bawah ini.
+          <p className="mt-2 text-xs sm:text-sm text-gray-400">
+            Punya pertanyaan, tawaran proyek, atau sekadar ingin menyapa? Kirim pesan Anda di sini.
           </p>
         </div>
 
         {/* Form & Info Section */}
-        <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
           
           {/* Info Kontak & Sosial Media */}
-          <div className="flex flex-col justify-between rounded-2xl bg-slate-800 p-8 text-white shadow-xl lg:p-10">
+          <div className="flex flex-col justify-between rounded-3xl bg-gray-900 border border-gray-800 p-8 shadow-xl">
             <div>
-              <h3 className="text-2xl font-bold tracking-tight text-white">Contact Information</h3>
-              <p className="mt-3 text-sm text-slate-300">
+              <h3 className="text-lg font-bold tracking-tight text-white">Contact Information</h3>
+              <p className="mt-2 text-xs text-gray-400 leading-relaxed">
                 Silakan hubungi melalui detail kontak berikut atau jaringan media sosial saya.
               </p>
 
               <div className="mt-8 space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
-                    <FaLocationDot size={18} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-400 border border-pink-500/20 shrink-0">
+                    <FaLocationDot size={16} />
                   </div>
-                  <span className="text-sm font-medium text-slate-200">
+                  <span className="text-xs font-medium text-gray-300 leading-relaxed">
                     Sendang Mulyo, Tembalang, Semarang City, Central Java 50272
                   </span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
-                    <FaPhone size={18} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-400 border border-pink-500/20 shrink-0">
+                    <FaPhone size={16} />
                   </div>
-                  <span className="text-sm font-medium text-slate-200">(+62) 8572-7738-629</span>
+                  <span className="text-xs font-medium text-gray-300">(+62) 8572-7738-629</span>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
-                    <IoMail size={18} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-400 border border-pink-500/20 shrink-0">
+                    <IoMail size={16} />
                   </div>
-                  <a href="mailto:ffikri604@gmail.com" className="text-sm font-medium text-slate-200 hover:text-indigo-400 transition-colors">
+                  <a href="mailto:ffikri604@gmail.com" className="text-xs font-medium text-gray-300 hover:text-white transition-colors">
                     ffikri604@gmail.com
                   </a>
                 </div>
@@ -95,87 +135,106 @@ export default function Contact({ api }) {
             </div>
 
             {/* Media Sosial */}
-            <div className="mt-10 pt-6 border-t border-slate-700">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Follow Me</p>
-              <div className="mt-4 flex gap-4 text-slate-300">
-                <a href="https://x.com/bintangFikri3" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
-                  <FaXTwitter size={18} />
+            <div className="mt-10 pt-6 border-t border-gray-800">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-3">Follow Me</p>
+              <div className="flex gap-3 text-gray-300">
+                <a href="https://x.com/bintangFikri3" target="_blank" rel="noreferrer" className="rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 p-3 hover:text-white transition-all">
+                  <FaXTwitter size={16} />
                 </a>
-                <a href="https://www.linkedin.com/in/muhammad-fikri-ardiyansah-952752194/" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
-                  <FaLinkedinIn size={18} />
+                <a href="https://www.linkedin.com/in/muhammad-fikri-ardiyansah-952752194/" target="_blank" rel="noreferrer" className="rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 p-3 hover:text-white transition-all">
+                  <FaLinkedinIn size={16} />
                 </a>
-                <a href="https://fb.com/muhammad.f.ardiyansah.16/" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
-                  <FaFacebookF size={18} />
+                <a href="https://fb.com/muhammad.f.ardiyansah.16/" target="_blank" rel="noreferrer" className="rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 p-3 hover:text-white transition-all">
+                  <FaFacebookF size={16} />
                 </a>
-                <a href="https://www.instagram.com/fkri.ardn/?hl=en" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
-                  <FaInstagram size={18} />
+                <a href="https://www.instagram.com/fkri.ardn/?hl=en" target="_blank" rel="noreferrer" className="rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 p-3 hover:text-white transition-all">
+                  <FaInstagram size={16} />
                 </a>
               </div>
             </div>
           </div>
 
           {/* Form Kontak Modern */}
-          <div className="rounded-2xl bg-white p-8 shadow-md border border-slate-200/80 dark:bg-slate-800 dark:border-slate-700/60 lg:p-10">
-            <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Send a Message</h3>
-            
-            {/* Alert Notifikasi */}
-            {status === 'success' && (
-              <div className="mt-4 rounded-xl bg-emerald-500/10 p-4 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
-                ✓ Pesan Anda berhasil dikirim! Terima kasih telah menghubungi.
-              </div>
-            )}
-            {status === 'error' && (
-              <div className="mt-4 rounded-xl bg-rose-500/10 p-4 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-sm font-semibold">
-                ✕ Gagal mengirim pesan. Silakan coba lagi atau kirim via email langsung.
-              </div>
-            )}
+          <div className="rounded-3xl bg-gray-900 border border-gray-800 p-8 shadow-xl">
+            <h3 className="text-lg font-bold tracking-tight text-white mb-6">Send a Message</h3>
 
-            <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-5">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-semibold text-gray-300">Full Name</label>
+                  {errors.name && (
+                    <span className="text-[10px] font-bold text-pink-500 flex items-center gap-1">
+                      <HiExclamationCircle className="w-3.5 h-3.5" /> Kolom ini wajib diisi
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   name="name"
                   value={fields.name}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  required
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                  className={`w-full rounded-2xl bg-gray-950 px-4 py-3 text-xs text-white border transition-all focus:outline-none ${
+                    errors.name 
+                      ? 'border-pink-500/80 focus:ring-2 focus:ring-pink-500/20' 
+                      : 'border-gray-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-semibold text-gray-300">Email Address</label>
+                  {errors.email && (
+                    <span className="text-[10px] font-bold text-pink-500 flex items-center gap-1">
+                      <HiExclamationCircle className="w-3.5 h-3.5" /> Kolom ini wajib diisi
+                    </span>
+                  )}
+                </div>
                 <input
                   type="email"
                   name="email"
                   value={fields.email}
                   onChange={handleChange}
                   placeholder="johndoe@example.com"
-                  required
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                  className={`w-full rounded-2xl bg-gray-950 px-4 py-3 text-xs text-white border transition-all focus:outline-none ${
+                    errors.email 
+                      ? 'border-pink-500/80 focus:ring-2 focus:ring-pink-500/20' 
+                      : 'border-gray-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Message</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-semibold text-gray-300">Message</label>
+                  {errors.message && (
+                    <span className="text-[10px] font-bold text-pink-500 flex items-center gap-1">
+                      <HiExclamationCircle className="w-3.5 h-3.5" /> Kolom ini wajib diisi
+                    </span>
+                  )}
+                </div>
                 <textarea
                   name="message"
                   rows={4}
                   value={fields.message}
                   onChange={handleChange}
                   placeholder="Tuliskan pesan atau detail proyek Anda di sini..."
-                  required
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                  className={`w-full rounded-2xl bg-gray-950 px-4 py-3 text-xs text-white border transition-all focus:outline-none resize-none ${
+                    errors.message 
+                      ? 'border-pink-500/80 focus:ring-2 focus:ring-pink-500/20' 
+                      : 'border-gray-800 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20'
+                  }`}
                 ></textarea>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-indigo-600 py-3.5 text-center text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50"
+                className="w-full rounded-2xl bg-pink-600 hover:bg-pink-500 py-3.5 text-center text-xs font-bold text-white shadow-lg shadow-pink-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
               >
-                {loading ? 'Sending...' : 'Send Message →'}
+                <span>{loading ? 'Sending Message...' : 'Send Message'}</span>
+                {!loading && <HiArrowRight className="w-4 h-4" />}
               </button>
             </form>
           </div>

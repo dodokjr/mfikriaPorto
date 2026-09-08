@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import '../assets/App.css'
+import { useEffect, useState } from 'react';
+import '../assets/App.css';
 import Layout from './layout';
 import Home from './components/home/home';
 import TimeLine from './components/home/timeLine';
@@ -8,37 +8,55 @@ import BlogHome from './components/blog/blogHome';
 import Contac from './components/utilities/contac';
 import Loading from './components/utilities/Loading';
 import SectionStar from './components/home/SectionStar';
-
+import Benner from './components/utilities/Benner.jsx';
+import { IoReload } from 'react-icons/io5';
 
 function App() {
-  const [data , setData] = useState(null)
-  useEffect(() => {
-    fetch("https://api-mfikria.vercel.app/v1/home")
-    .then(res => res.json())
-    .then(body => setData(body))
-    .catch(error => console.error("api not respons,plese call me: ffikri604@gmail.com"))
-  }, [])
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if(!data) return <Loading/>
+  useEffect(() => {
+    let isMounted = true;
+    fetch("https://api-mfikria.vercel.app/v1/home")
+      .then((res) => res.json())
+      .then((body) => {
+        if (isMounted) {
+          setData(body);
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("API not responding, please call me: ffikri604@gmail.com", error);
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
-    <Layout >
-      <div  className="diff aspect-[16/9]">
-        <div className="diff-item-1">
-          <div className="bg-white text-blue-600 text-9xl font-black grid place-content-center">Mfikria</div>
+    <Layout>
+      <main className="bg-gray-950 min-h-screen text-white">
+        {/* Hero Banner Minimalis / Pengganti Diff Lama */}
+        <Benner/>
+
+        {/* Komponen Konten Utama */}
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-16">
+          <Home data={data} />
+          <TimeLine />
+          <HomeProject api={data} />
+          <SectionStar />
+          <BlogHome api={data} />
+          <Contac api={data} />
         </div>
-          <div className="diff-item-2">
-          <div className="bg-blue-600 text-9xl font-black text-white grid place-content-center">Mfikria</div>
-        </div>
-      <div className="diff-resizer"></div>
-    </div>
-    <Home data={data}/>
-    <TimeLine/>
-    <HomeProject api={data}/>
-    <SectionStar/>
-    <BlogHome api={data}/>
-    <Contac api={data}/>
+      </main>
     </Layout>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import '../assets/App.css'
 import Layout from './layout';
 import HomeStore from './components/store/homeStore.jsx'
+import Alert from './components/utilities/Alert'
 
 export default function Store(){
     const [data, setData] = useState([])
@@ -17,9 +18,13 @@ export default function Store(){
     }
 
     if(data){
-        console.log(data.data)
+        "Data berhasil di dapat"
     } else {
-        console.error("data tidak ada/error")
+        return(
+            <Alert variant="error" title="Gagal Menyimpan" dismissible>
+                Koneksi server terputus. Silakan coba beberapa saat lagi.
+            </Alert>
+        )
     }
 
     return(

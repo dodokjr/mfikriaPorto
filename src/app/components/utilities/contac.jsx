@@ -1,239 +1,187 @@
-import React,{useEffect, useState, useRef} from 'react'
-import emailjs from'@emailjs/browser'
-import { FaLocationDot,FaPhone,FaXTwitter,FaLinkedinIn, FaFacebookF, FaInstagram } from "react-icons/fa6";
+import React, { useState, useRef } from 'react';
+import emailjs from '@emailjs/browser';
+import { FaLocationDot, FaPhone, FaXTwitter, FaLinkedinIn, FaFacebookF, FaInstagram } from "react-icons/fa6";
 import { IoMail } from "react-icons/io5";
-import { BiErrorAlt } from "react-icons/bi";
 
+export default function Contact({ api }) {
+  const formRef = useRef();
+  const [fields, setFields] = useState({ name: '', email: '', message: '' });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null); // 'success' | 'error' | null
 
-export default function Contac({api}) {
-    const inputValue = useRef()
-    const [fields, setFields] = useState({});
-    const [errors, setErrors] = useState({});
-    const [notif, setNotif] = useState(false);
-    const [errNotif, setErrNotif] = useState(false);
-    const formRef = useRef();
+  const handleChange = (e) => {
+    setFields({ ...fields, [e.target.name]: e.target.value });
+  };
 
-    const handleValidation = () => {
-        const formFields = {...fields};
-        const formErrors = {};
-        let formIsValid = true;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
 
-        // name
-      if(!formFields["name"]){
-        formIsValid = false;
-        formErrors["name"] = "Cannot be empty";  
-      }
-
-      if(typeof formFields["name"] !== "undefined") {
-        if(!formFields["name"].match(/^[a-zA-Z]+$/)) {
-            formIsValid = false;
-            formErrors["name"] = "Only letters"
+    emailjs
+      .sendForm(
+        'service_ru3f035',
+        'template_aggqz48',
+        formRef.current,
+        'tVJhXv51XVHIQind4'
+      )
+      .then(
+        () => {
+          setStatus('success');
+          setFields({ name: '', email: '', message: '' });
+        },
+        () => {
+          setStatus('error');
         }
-      }
+      )
+      .finally(() => setLoading(false));
+  };
 
-        //email
-
-        if(!formFields["email"]){
-            formIsValid = false;
-            formErrors["email"] = "Cannot be empty";  
-          }
-
-          if(typeof formFields["email"] !== "undefined"){
-            let lastAtPos = formFields["email"].lastIndexOf('@');
-            let lastDotPos = formFields["email"].lastIndexOf('.');
-      
-            if (!(lastAtPos < lastDotPos && lastAtPos > 0 && formFields["email"].indexOf('@') == -1 && lastDotPos > 2 && (fields["email"].length - lastDotPos) > 2)) {
-              formIsValid = false;
-              formFields["email"] = "Email is not valid";
-            }
-          }
-          
-        //message
+  return (
+    <section className="bg-slate-100/70 py-16 transition-colors duration-300 dark:bg-slate-900">
+      <div className="container mx-auto px-6">
         
-        if(!formFields["message"]){
-            formIsValid = false;
-            formErrors["message"] = "Cannot be empty";  
-        }
-        setErrors(formErrors)
-        return formIsValid;
-    }
-    
-    function handleChange(field, value) {
-        setFields({
-            ...fields,
-            [field]: value
-        });
-    }
+        {/* Header Section */}
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            Get In Touch
+          </span>
+          <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+            Contact Me
+          </h2>
+          <div className="mx-auto mt-3 h-1.5 w-16 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+          <p className="mt-4 text-base font-medium text-slate-600 dark:text-slate-300 sm:text-lg">
+            Punya pertanyaan, tawaran proyek, atau sekadar ingin menyapa? Silakan kirim pesan Anda di bawah ini.
+          </p>
+        </div>
 
-    const handleSubmit = (e) =>
-    {
-      const keyword = inputValue.current.value;
-      if(e.key == 'Enter' || e.type === 'click'){
-        e.preventDefault();
-        if(handleValidation()) {
-            emailjs
-          .sendForm(
-            'service_ru3f035',
-            'template_aggqz48',
-            formRef.current,
-            'tVJhXv51XVHIQind4'
-          )
-          .then(
-            (result) =>
-            {
-              setNotif(true)
-            },
-            (Error) => {
-                setErrNotif(true)
-            }
-          ); 
-        } 
-      }
-    };
-  return ( 
-    <section className="min-h-screen bg-cover " style={{backgroundImage: `url('https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80')`}}>
-    <div className="flex flex-col min-h-screen bg-black/60">
-        <div className="container flex flex-col flex-1 px-6 py-12 mx-auto">
-            <div className="flex-1 lg:flex lg:items-center lg:-mx-6">
-            <div className="text-white lg:w-1/2 lg:mx-6">
-                <h1 className="text-2xl font-semibold capitalize lg:text-3xl">Get a quote</h1>
+        {/* Form & Info Section */}
+        <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
+          
+          {/* Info Kontak & Sosial Media */}
+          <div className="flex flex-col justify-between rounded-2xl bg-slate-800 p-8 text-white shadow-xl lg:p-10">
+            <div>
+              <h3 className="text-2xl font-bold tracking-tight text-white">Contact Information</h3>
+              <p className="mt-3 text-sm text-slate-300">
+                Silakan hubungi melalui detail kontak berikut atau jaringan media sosial saya.
+              </p>
 
-                <p className="max-w-xl mt-6">Ask us everything and we would love to hear from you</p>
-
-                <div className="mt-6 space-y-8 md:mt-8">
-                    <p className="flex items-start -mx-2">
-                        <FaLocationDot size={19} className='w-6 h-6 mx-2 text-white'/>
-                        <span className="mx-2 text-white truncate w-72">
-                            Sendang Mulyo Tembalang Semarang City, Central Of Java. 50272 
-                        </span>
-                    </p>
-
-                    <p className="flex items-start -mx-2">
-                        <FaPhone size={19} className='w-6 h-6 mx-2 text-white'/>
-                        <span class="mx-2 text-white truncate w-72">(+62) 8572-7738-629</span>
-                    </p>
-
-                    <p class="flex items-start -mx-2">
-                        <IoMail size={19} className='w-6 h-6 mx-2 text-white'/>
-                        <a href='mailto:ffikri604@gmail.com'><span class="mx-2 text-white truncate w-72">ffikri604@gmail.com</span></a>
-                    </p>
+              <div className="mt-8 space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+                    <FaLocationDot size={18} />
+                  </div>
+                  <span className="text-sm font-medium text-slate-200">
+                    Sendang Mulyo, Tembalang, Semarang City, Central Java 50272
+                  </span>
                 </div>
 
-                <div class="mt-6 md:mt-8">
-                    <h3 class="text-gray-300 ">Follow us</h3>
-
-                    <div class="flex mt-4 -mx-1.5">
-                        <a href="https://x.com/bintangFikri3" target='_blank' class="mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500">
-                            <FaXTwitter size={22} className='fill-current'/>
-                        </a>
-
-                        <a href="https://www.linkedin.com/in/muhammad-fikri-ardiyansah-952752194/" target='_blank' class="mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500">
-                            <FaLinkedinIn size={22} className='fill-current'/>
-                        </a>
-
-                        <a href='https://fb.com/muhammad.f.ardiyansah.16/' target='_blank' class="mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500">
-                            <FaFacebookF size={22} className='fill-current'/>
-                        </a>
-
-                        <a href="https://www.instagram.com/fkri__17?hl=en" target='_blank' class="mx-1.5 text-white transition-colors duration-300 transform hover:text-blue-500">
-                            <FaInstagram size={22} className='fill-current'/>
-                        </a>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+                    <FaPhone size={18} />
+                  </div>
+                  <span className="text-sm font-medium text-slate-200">(+62) 8572-7738-629</span>
                 </div>
-            </div>
 
-{/* Contac form */}
-                <div className="mt-8 lg:w-1/2 lg:mx-6">
-                    <div className="w-full px-8 py-10 mx-auto overflow-hidden bg-white shadow-2xl rounded-xl dark:bg-gray-900 lg:max-w-xl">
-                        <h1 className="text-xl font-medium text-gray-700 dark:text-gray-200">Contact form</h1>
-
-                        <p className="mt-2 text-gray-500 dark:text-gray-400">
-                            Ask us everything and we would love
-                            to hear from you
-                        </p>
-
-
-{notif && <div className="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-    <div className="flex items-center justify-center w-12 bg-emerald-500">
-        <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z" />
-        </svg>
-    </div>
-    <div className="px-4 py-2 -mx-3">
-        <div className="mx-3">
-            <span className="font-semibold text-emerald-500 dark:text-emerald-400">Success</span>
-            <p className="text-sm text-gray-600 dark:text-gray-200">Your Message has been sent!!</p>
-        </div>
-    </div>
-</div>
- ||  errNotif && <div className="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800">
-        <div className="flex items-center justify-center w-12 bg-red-500">
-            <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 3.36667C10.8167 3.36667 3.3667 10.8167 3.3667 20C3.3667 29.1833 10.8167 36.6333 20 36.6333C29.1834 36.6333 36.6334 29.1833 36.6334 20C36.6334 10.8167 29.1834 3.36667 20 3.36667ZM19.1334 33.3333V22.9H13.3334L21.6667 6.66667V17.1H27.25L19.1334 33.3333Z" />
-            </svg>
-        </div>
-    
-        <div className="px-4 py-2 -mx-3">
-            <div className="mx-3">
-                <span className="font-semibold text-red-500 dark:text-red-400">Error</span>
-                <p className="text-sm text-gray-600 dark:text-gray-200">
-                your message was not sent!!
-                </p>
-            </div>
-        </div>
-    </div>}
-                        <form className="mt-6" ref={formRef} onSubmit={handleSubmit}>
-                        <div className="flex-1">
-                            <label className="form-control w-full max-w-xs">
-                            <div className="label">
-                            <span className="label-text">What is your name?</span>
-                            <span className="label-text-alt text-red-500">{errors["name"]}</span>
-                            </div>
-                            <input type="name" name='name' onChange={e => handleChange('name', e.target.value)} value={fields["name"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="John Doe" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required />
-                            </label>
-                        </div>
-
-                        <div className="flex-1 mt-6">
-                        <label className="form-control w-full max-w-xs">
-                            <div className="label">
-                            <span className="label-text">Email address</span>
-                            <span className="label-text-alt text-red-500">{errors["email"]}</span>
-                            </div>
-                            <input type="email" name='email' onChange={e => handleChange('email', e.target.value)} value={fields["email"]} ref={inputValue} onKeyDown={handleSubmit} placeholder="johndoe@example.com" class="block w-full px-5 py-3 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" required/>
-                        </label>
-                        </div>
-
-                            <div className="w-full mt-6">
-                            <label className="form-control w-full max-w-xs">
-                            <div className="label">
-                            <span className="label-text">Message</span>
-                            <span className="label-text-alt text-red-500">{errors["message"]}</span>
-                            </div>
-                            <textarea name="message" onChange={e => handleChange('message', e.target.value)} value={fields["message"]} className="block w-full h-32 px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md md:h-48 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40 dark:focus:border-blue-300 focus:outline-none focus:ring" ref={inputValue} onKeyDown={handleSubmit} placeholder="Message" required></textarea>
-                        </label>
-                        </div>
-
-                        <div className='flex mt-6'>
-                        <button onClick={handleSubmit} className="text-black text-slate-800 p-2 relative inline-flex items-center justify-start py-3 pl-4 pr-12 overflow-hidden font-semibold text-white transition-all duration-150 ease-in-out rounded hover:pl-10 hover:pr-6 group">
-                            <span className="absolute bottom-0 left-0 w-full h-1 transition-all duration-150 ease-in-out bg-indigo-600 group-hover:h-full"></span>
-                            <span className="absolute right-0 pr-4 duration-200 ease-out group-hover:translate-x-12">
-                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </span>
-                            <span className="absolute left-0 pl-2.5 -translate-x-12 group-hover:translate-x-0 ease-out duration-200">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                            </span>
-                            <span className="relative w-full text-left transition-colors duration-200 ease-in-out group-hover:text-white">Send</span>
-                        </button>
-                        </div>
-                        </form>
-                        <div className='p-2 flex justify-center'>
-                        
-                        </div>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+                    <IoMail size={18} />
+                  </div>
+                  <a href="mailto:ffikri604@gmail.com" className="text-sm font-medium text-slate-200 hover:text-indigo-400 transition-colors">
+                    ffikri604@gmail.com
+                  </a>
                 </div>
+              </div>
             </div>
+
+            {/* Media Sosial */}
+            <div className="mt-10 pt-6 border-t border-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Follow Me</p>
+              <div className="mt-4 flex gap-4 text-slate-300">
+                <a href="https://x.com/bintangFikri3" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
+                  <FaXTwitter size={18} />
+                </a>
+                <a href="https://www.linkedin.com/in/muhammad-fikri-ardiyansah-952752194/" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
+                  <FaLinkedinIn size={18} />
+                </a>
+                <a href="https://fb.com/muhammad.f.ardiyansah.16/" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
+                  <FaFacebookF size={18} />
+                </a>
+                <a href="https://www.instagram.com/fkri.ardn/?hl=en" target="_blank" rel="noreferrer" className="rounded-lg bg-slate-700 p-2.5 hover:bg-indigo-600 hover:text-white transition-all">
+                  <FaInstagram size={18} />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Kontak Modern */}
+          <div className="rounded-2xl bg-white p-8 shadow-md border border-slate-200/80 dark:bg-slate-800 dark:border-slate-700/60 lg:p-10">
+            <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Send a Message</h3>
+            
+            {/* Alert Notifikasi */}
+            {status === 'success' && (
+              <div className="mt-4 rounded-xl bg-emerald-500/10 p-4 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
+                ✓ Pesan Anda berhasil dikirim! Terima kasih telah menghubungi.
+              </div>
+            )}
+            {status === 'error' && (
+              <div className="mt-4 rounded-xl bg-rose-500/10 p-4 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-sm font-semibold">
+                ✕ Gagal mengirim pesan. Silakan coba lagi atau kirim via email langsung.
+              </div>
+            )}
+
+            <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={fields.name}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  required
+                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={fields.email}
+                  onChange={handleChange}
+                  placeholder="johndoe@example.com"
+                  required
+                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Message</label>
+                <textarea
+                  name="message"
+                  rows={4}
+                  value={fields.message}
+                  onChange={handleChange}
+                  placeholder="Tuliskan pesan atau detail proyek Anda di sini..."
+                  required
+                  className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:focus:border-indigo-400"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-indigo-600 py-3.5 text-center text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg disabled:opacity-50"
+              >
+                {loading ? 'Sending...' : 'Send Message →'}
+              </button>
+            </form>
+          </div>
+
         </div>
-    </div>
-</section>
-  )
+      </div>
+    </section>
+  );
 }

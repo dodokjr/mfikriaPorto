@@ -1,38 +1,79 @@
-import React from 'react'
+import React from 'react';
 
-export default function BlogHome({api}) {
+export default function BlogHome({ api }) {
+  const blogs = api?.data?.blog || [];
+
   return (
-    <div className="bg-white dark:bg-gray-900">
-  <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
-      <div className="mx-auto max-w-screen-sm text-center lg:mb-16 mb-8">
-          <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Our Blog</h2>
-          <p className="font-light text-gray-500 sm:text-xl dark:text-gray-400">We use an agile approach to test assumptions and connect with the needs of your audience early and often.</p>
-      </div> 
-      <div className='grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8'>
-        {api.data && api.data.blog.map((r,i) => {
-            return(
-           <article className="relative overflow-hidden rounded-lg shadow transition hover:shadow-lg" id={r.id} key={i}>
-  <img
-    alt=""
-    src={r.img_src}
-    className="absolute inset-0 h-full w-full object-cover"
-  />
-  <div className="relative bg-gradient-to-t from-gray-900/50 to-gray-900/25 pt-32 sm:pt-48 lg:pt-64">
-    <div className="p-4 sm:p-6">
-      <span className="block text-xs text-white/90"> {r.postBy.time} </span>
-      <a href={`blog/${r.slug}`}>
-        <h3 className="mt-0.5 text-lg text-white">{r.title}</h3>
-      </a>
-      <p className="mt-2 line-clamp-3 text-sm/relaxed text-white/95">
-        {r.descriptions}
-      </p>
-    </div>
-  </div>
-</article>
-            )
-        })}
-    </div>
-  </div>
-</div>
-  )
+    <section className="bg-slate-100/70 py-16 transition-colors duration-300 dark:bg-slate-900">
+      <div className="container mx-auto px-6">
+        
+        {/* Header Section */}
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            Articles & News
+          </span>
+          <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+            Latest Blog Posts
+          </h2>
+          <div className="mx-auto mt-3 h-1.5 w-16 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+          <p className="mt-4 text-base font-medium text-slate-600 dark:text-slate-300 sm:text-lg">
+            Berbagi pemikiran, tutorial, serta wawasan seputar teknologi dan pengembangan aplikasi.
+          </p>
+        </div>
+
+        {/* Grid Artikel */}
+        <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {blogs.map((r, i) => (
+            <article
+              key={r.id || i}
+              className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-md border border-slate-200/80 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl dark:bg-slate-800 dark:border-slate-700/60"
+            >
+              {/* Thumbnail Gambar */}
+              <div className="relative h-52 w-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+                <img
+                  src={r.img_src}
+                  alt={r.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Konten Artikel */}
+              <div className="flex flex-1 flex-col justify-between p-6">
+                <div>
+                  {/* Tanggal / Penulis */}
+                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    <span>{r.postBy?.time || 'Recent'}</span>
+                  </div>
+
+                  {/* Judul Artikel */}
+                  <a href={`/blog/${r.slug}`} className="mt-2 block">
+                    <h3 className="text-xl font-bold tracking-tight text-slate-900 transition-colors hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400 line-clamp-2">
+                      {r.title}
+                    </h3>
+                  </a>
+
+                  {/* Deskripsi */}
+                  <p className="mt-3 text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
+                    {r.descriptions}
+                  </p>
+                </div>
+
+                {/* Link Baca Selengkapnya */}
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                  <a
+                    href={`/blog/${r.slug}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+                  >
+                    Read Article <span className="transition-transform group-hover:translate-x-1">→</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
 }

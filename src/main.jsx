@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client'
 import App from './app/App.jsx'
 import './assets/index.css'
 import {
-  createBrowserRouter,
-  RouterProvider,
+createBrowserRouter,
+RouterProvider,
 } from "react-router-dom";
 import Contac from './app/contac.jsx';
 import ProjectApp from './app/projectApp.jsx';
@@ -16,59 +16,29 @@ import { ProjectParams } from './app/paramsApps/projectParams.jsx';
 import MyHobbies from './app/myHobbies.jsx';
 import Link from './app/link.jsx';
 import CvPdf from "./assets/documents/cv.pdf"
-import Capps from './app/components/company/Capps.jsx';
-import ChatAi from './app/components/chatAi/ChatAi.jsx';
 import Store from './app/Store.jsx'
+import LoginForm from'./app/components/admin/LoginForm.jsx'
+import Dashboard from'./app/components/admin/Dashboard.jsx'
 
 const router = createBrowserRouter([
-  {
-    path: "/app",
-    element: <App/>,
-  },
-  {
-    path: "/project",
-    element: <ProjectApp/>
-  },
-  {
-    path: "/blog",
-    element: <Blog/>
-  },
-  {
-    path: "/blog/:id",
-    element: <BlogParams/>
-  },
-  {
-      path: "/contact/:id",
-      element: <Contac/>
-  },
-  {
-    path: "/project/:id",
-    element: <ProjectParams/>
-},
-{
-  path: "/hobbies",
-  element: <MyHobbies />
-},
-{
-  path: "/me",
-  element: <Link/>
-},
-{
-  path: "/store",
-  element: <Store/> 
-},
-  {
-    path: "*",
-    element: <NotFound/>
-  },
-  
-]);
+  { path: "/app", element: <App /> },
+  { path: "/project", element: <ProjectApp /> },
+  { path: "/project/:id", element: <ProjectParams /> },
+  { path: "/blog", element: <Blog /> },
+  { path: "/blog/:id", element: <BlogParams /> },
+  { path: "/contact/:id", element: <Contac /> },
+  { path: "/hobbies", element: <MyHobbies /> },
+  { path: "/me", element: <Link /> },
+  { path: "/store", element: <Store /> },
+  { path: "/auth/ff/login", element: <LoginForm /> },
+  { path: "/auth/ff/Dashboard", element: <Dashboard /> },
+  { path: "*", element: <NotFound /> }
+])
 
 ReactDOM.createRoot(document.getElementById('m00tyourPage')).render(
   <React.StrictMode>
     <NoInternetConnection>
-    <RouterProvider router={router} />
+      <RouterProvider router={router} />
     </NoInternetConnection>
-  </React.StrictMode>,
-
+  </React.StrictMode>
 )

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { MdSkipPrevious } from "react-icons/md";
-import { IoPlaySkipForward, IoPlaySharp, IoPause, IoReload, IoVolumeHigh, IoVolumeMute } from "react-icons/io5";
+import { IoPlaySkipForward, IoPlaySharp, IoPause, IoReload, IoVolumeHigh, IoVolumeMute, IoShuffle, IoRepeat } from "react-icons/io5";
 
 export default function Music() {
   const musicAPI = [
@@ -54,13 +54,19 @@ export default function Music() {
   const [avatarClassIndex, setAvatarClassIndex] = useState(0)
   const [isScrolled, setIsScrolled] = useState(false)
 
+  const [isShuffle, setIsShuffle] = useState(false)
+  const [isLooping, setIsLooping] = useState(false)
+
+  const playerRef = useRef(null)
+  const posRef = useRef({ x: 0, y: 0, isDragging: false, startX: 0, startY: 0 })
+
   const currentAudio = useRef(null)
   const avatarClass = ['object-cover', 'object-contain', 'rounded-none']
 
-  // Deteksi posisi scroll halaman
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 300) {
+      // Diturunkan ke 100px agar lebih mudah muncul saat di-scroll ke bawah
+      if (window.scrollY > 100) {
         setIsScrolled(true)
       } else {
         setIsScrolled(false)
@@ -69,6 +75,51 @@ export default function Music() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (currentAudio.current) {
+      currentAudio.current.volume = volume
+    }
+  }, [])
+
+  const handlePointerDown = (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') return
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX)
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY)
+
+    posRef.current.isDragging = true
+    posRef.current.startX = clientX - posRef.current.x
+    posRef.current.startY = clientY - posRef.current.y
+
+    document.addEventListener('mousemove', handlePointerMove)
+    document.addEventListener('mouseup', handlePointerUp)
+    document.addEventListener('touchmove', handlePointerMove)
+    document.addEventListener('touchend', handlePointerUp)
+  }
+
+  const handlePointerMove = (e) => {
+    if (!posRef.current.isDragging) return
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX)
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY)
+
+    posRef.current.x = clientX - posRef.current.startX
+    posRef.current.y = clientY - posRef.current.startY
+
+    if (playerRef.current) {
+      requestAnimationFrame(() => {
+        playerRef.current.style.transform = `translate3d(${posRef.current.x}px, ${posRef.current.y}px, 0)`
+      })
+    }
+  }
+
+  const handlePointerUp = () => {
+    posRef.current.isDragging = false
+    document.removeEventListener('mousemove', handlePointerMove)
+    document.removeEventListener('mouseup', handlePointerUp)
+    document.removeEventListener('touchmove', handlePointerMove)
+    document.removeEventListener('touchend', handlePointerUp)
+  }
 
   const handleAvatar = () => {
     setAvatarClassIndex((prev) => (prev >= avatarClass.length - 1 ? 0 : prev + 1))
@@ -87,30 +138,57 @@ export default function Music() {
 
   const updateCurrentMusicDetails = (index) => {
     setIsLoading(true)
+    setIsAudioPlaying(true) 
     const musicObject = musicAPI[index]
+    setMusicIndex(index)
+    setCurrentMusicDetails(musicObject)
+    
     if (currentAudio.current) {
+      currentAudio.current.pause()
+      currentAudio.current.currentTime = 0
       currentAudio.current.src = musicObject.songSrc
       currentAudio.current.load()
+      
       currentAudio.current.play().then(() => {
-        setIsAudioPlaying(true)
         setIsLoading(false)
-      }).catch(() => {
+      }).catch((err) => {
+        console.log("Audio play error:", err)
         setIsLoading(false)
+        setIsAudioPlaying(false)
       })
     }
-    setCurrentMusicDetails(musicObject)
   }
 
   const handleNextSong = () => {
-    const nextIndex = musicIndex >= musicAPI.length - 1 ? 0 : musicIndex + 1
-    setMusicIndex(nextIndex)
-    updateCurrentMusicDetails(nextIndex)
+    if (isShuffle) {
+      let randomIndex = Math.floor(Math.random() * musicAPI.length)
+      while (randomIndex === musicIndex && musicAPI.length > 1) {
+        randomIndex = Math.floor(Math.random() * musicAPI.length)
+      }
+      updateCurrentMusicDetails(randomIndex)
+    } else {
+      const nextIndex = musicIndex >= musicAPI.length - 1 ? 0 : musicIndex + 1
+      updateCurrentMusicDetails(nextIndex)
+    }
   }
 
   const handlePrevSong = () => {
     const prevIndex = musicIndex === 0 ? musicAPI.length - 1 : musicIndex - 1
-    setMusicIndex(prevIndex)
     updateCurrentMusicDetails(prevIndex)
+  }
+
+  const handleSongEnded = () => {
+    if (!isLooping) {
+      handleNextSong()
+    }
+  }
+
+  const toggleShuffle = () => {
+    setIsShuffle(!isShuffle)
+  }
+
+  const toggleLoop = () => {
+    setIsLooping(!isLooping)
   }
 
   const handleMusicProgressBar = (e) => {
@@ -165,26 +243,40 @@ export default function Music() {
 
   return (
     <>
-      {/* Audio Element Utama */}
       <audio 
         ref={currentAudio} 
         src={currentMusicDetails.songSrc} 
-        onEnded={handleNextSong} 
+        loop={isLooping}
+        onEnded={handleSongEnded} 
         onTimeUpdate={handleAudioUpdate}
         onWaiting={() => setIsLoading(true)}
         onPlaying={() => setIsLoading(false)}
         onCanPlay={() => setIsLoading(false)}
       />
 
-      {/* Tampilan Utama (Di Tengah Halaman) */}
       <section className="bg-gray-950 min-h-screen py-12 px-4 flex flex-col items-center justify-center text-white">
         <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
           
-          <div className="text-center mb-6">
+          <div className="text-center mb-6 flex justify-between items-center">
             <span className="text-xs font-semibold tracking-wider text-pink-500 uppercase bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">
               Music Distro
             </span>
-            <h2 className="mt-3 text-xl font-bold tracking-tight text-white">Now Playing</h2>
+            <div className="flex gap-2">
+              <button 
+                onClick={toggleShuffle} 
+                className={`p-2 rounded-full border transition-colors ${isShuffle ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}
+                title="Acak Lagu"
+              >
+                <IoShuffle size={16} />
+              </button>
+              <button 
+                onClick={toggleLoop} 
+                className={`p-2 rounded-full border transition-colors ${isLooping ? 'bg-pink-600 border-pink-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-white'}`}
+                title="Ulangi Lagu"
+              >
+                <IoRepeat size={16} />
+              </button>
+            </div>
           </div>
 
           <div className="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-8 rounded-2xl overflow-hidden bg-gray-800 border border-gray-700/60 shadow-lg cursor-pointer group" onClick={handleAvatar}>
@@ -232,7 +324,7 @@ export default function Music() {
             <input 
               type="range" 
               min="0" 
-              max="1`" 
+              max="1" 
               step="0.01" 
               value={isMuted ? 0 : volume} 
               onChange={handleVolumeChange} 
@@ -258,9 +350,16 @@ export default function Music() {
         </div>
       </section>
 
-      {/* Floating Mini Player (Pojok Kanan Bawah saat Scroll) */}
-      <div className={`fixed bottom-4 right-4 z-50 transition-all duration-300 transform ${isScrolled ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95 pointer-events-none'}`}>
-        <div className="flex items-center gap-3 bg-gray-900/90 backdrop-blur-md border border-gray-800 p-3 rounded-2xl shadow-2xl max-w-xs sm:max-w-sm w-full text-white">
+      {/* Floating Mini Player (Akan muncul setelah di-scroll > 100px) */}
+      <div 
+        ref={playerRef}
+        onMouseDown={handlePointerDown}
+        onTouchStart={handlePointerDown}
+        className={`fixed bottom-4 right-4 z-50 cursor-grab active:cursor-grabbing select-none transition-opacity duration-300 ${
+          isScrolled ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-3 bg-gray-900/95 backdrop-blur-md border border-gray-800 p-3 rounded-2xl shadow-2xl max-w-xs sm:max-w-sm w-full text-white">
           <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0">
             {isLoading && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
@@ -270,7 +369,7 @@ export default function Music() {
             <img src={currentMusicDetails.songAvatar} alt="Avatar" className="w-full h-full object-cover" />
           </div>
 
-          <div className="flex-grow min-w-0">
+          <div className="flex-grow min-w-0 pointer-events-none">
             <h4 className="text-xs font-bold text-white truncate">{currentMusicDetails.songName}</h4>
             <p className="text-[10px] text-pink-400 truncate">{currentMusicDetails.songArtist}</p>
             <div className="w-full bg-gray-800 h-1 rounded-full mt-1.5 overflow-hidden">

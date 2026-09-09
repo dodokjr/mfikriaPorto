@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import pp from "../assets/ppa.jpg";
-import { FaGlobe, FaHeart, FaShoppingBag, FaImages } from 'react-icons/fa';
+import qrisImg from "../assets/qris.jpeg";
+import { FaGlobe, FaHeart, FaShoppingBag, FaImages, FaSearchPlus, FaTimes } from 'react-icons/fa';
 import { IoReload } from 'react-icons/io5';
 
 export default function Link() {
   const [data, setData] = useState(null);
+  const [storeData, setStoreData] = useState([]);
+  const [galleryData, setGalleryData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isStoreLoading, setIsStoreLoading] = useState(false);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null); // State untuk alert error di pojok kanan atas
+
+  // Fungsi untuk menampilkan alert error otomatis hilang dalam 4 detik
+  const triggerErrorAlert = (message) => {
+    setErrorMessage(message);
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 4000);
+  };
 
   useEffect(() => {
     fetchData();
@@ -18,11 +34,88 @@ export default function Link() {
       const result = await api.json();
       setData(result.data || {});
     } catch (error) {
-      console.error("Data failed to fetch", error);
+      triggerErrorAlert("Gagal memuat data tautan utama.");
       setData({});
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchStoreData = async () => {
+    setIsStoreLoading(true);
+    try {
+      const api = await fetch("https://api-mfikria.vercel.app/mfikria/store/assets");
+      const result = await api.json();
+      setStoreData(result.data || result || []);
+    } catch (error) {
+      triggerErrorAlert("Gagal memuat data produk jualan.");
+      setStoreData([]);
+    } finally {
+      setIsStoreLoading(false);
+    }
+  };
+
+  const fetchGalleryData = async () => {
+    setIsGalleryLoading(true);
+    try {
+      const api = await fetch("https://api-mfikria.vercel.app/mfikria/c/ig");
+      const result = await api.json();
+      setGalleryData(result.data || result.data || []);
+    } catch (error) {
+      triggerErrorAlert("Gagal memuat data gallery.");
+      setGalleryData([]);
+    } finally {
+      setIsGalleryLoading(false);
+    }
+  };
+
+  // Helper untuk format angka ke Rupiah (contoh: 500000 -> Rp500.000)
+  const formatRupiah = (value) => {
+    if (!value) return "";
+    if (typeof value === 'string' && (value.toLowerCase().includes('rp') || isNaN(Number(value)))) {
+      return value;
+    }
+    const number = Number(value);
+    if (isNaN(number)) return value;
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(number).replace(/\s/g, '');
+  };
+
+  const handleOpenShopModal = () => {
+    fetchStoreData();
+    document.getElementById('shop_modal').showModal();
+  };
+
+  const handleOpenGalleryModal = () => {
+    fetchGalleryData();
+    document.getElementById('gallery_modal').showModal();
+  };
+
+  const handleOpenZoom = () => {
+    const donationModal = document.getElementById('donation_modal');
+    if (donationModal) {
+      donationModal.close();
+    }
+    setIsZoomed(true);
+  };
+
+  const handleCloseZoom = () => {
+    setIsZoomed(false);
+  };
+
+  const handleOpenImageZoom = (imgUrl) => {
+    const galleryModal = document.getElementById('gallery_modal');
+    if (galleryModal) {
+      galleryModal.close();
+    }
+    setSelectedImage(imgUrl);
+  };
+
+  const handleCloseImageZoom = () => {
+    setSelectedImage(null);
   };
 
   if (isLoading) {
@@ -38,7 +131,15 @@ export default function Link() {
   }
 
   return (
-    <section className="bg-gray-950 min-h-screen py-12 px-4 flex flex-col items-center justify-center text-white">
+    <section className="bg-gray-950 min-h-screen py-12 px-4 flex flex-col items-center justify-center text-white relative">
+      
+      {/* Alert Error Pojok Kanan Atas */}
+      {errorMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-bounce">
+          <span className="text-xs font-bold">{errorMessage}</span>
+        </div>
+      )}
+
       <div className="w-full max-w-md bg-gray-900 border border-gray-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-center">
         
         {/* Profile Image & Name */}
@@ -99,7 +200,7 @@ export default function Link() {
         {/* Fitur Spill Jualan & Gallery */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button 
-            onClick={() => document.getElementById('shop_modal').showModal()}
+            onClick={handleOpenShopModal}
             className="py-3 px-4 rounded-2xl bg-gray-800/80 hover:bg-gray-800 border border-gray-700 text-xs font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95"
           >
             <FaShoppingBag className="w-4 h-4 text-pink-400" />
@@ -107,7 +208,7 @@ export default function Link() {
           </button>
           
           <button 
-            onClick={() => document.getElementById('gallery_modal').showModal()}
+            onClick={handleOpenGalleryModal}
             className="py-3 px-4 rounded-2xl bg-gray-800/80 hover:bg-gray-800 border border-gray-700 text-xs font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 active:scale-95"
           >
             <FaImages className="w-4 h-4 text-indigo-400" />
@@ -128,8 +229,8 @@ export default function Link() {
 
       {/* Modal Spill Jualan */}
       <dialog id="shop_modal" className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-left">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-left max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center gap-2 mb-2">
             <FaShoppingBag className="w-5 h-5 text-pink-400" />
             <h3 className="font-bold text-base text-white">Spill Jualan & Produk</h3>
           </div>
@@ -137,22 +238,37 @@ export default function Link() {
             Beberapa produk, jasa, atau barang rekomendasi yang saya tawarkan:
           </p>
 
-          <div className="space-y-3 mb-6">
-            <div className="bg-gray-950 border border-gray-800 rounded-2xl p-3 flex justify-between items-center">
-              <div>
-                <h4 className="text-xs font-bold text-white">Jasa Pembuatan Website</h4>
-                <p className="text-[10px] text-gray-400">Custom React, Tailwind, Fullstack</p>
-              </div>
-              <span className="text-xs font-extrabold text-pink-400">Mulai Rp150rb</span>
+          {isStoreLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <IoReload className="w-6 h-6 text-pink-500 animate-spin mb-2" />
+              <p className="text-xs text-gray-400">Memuat produk...</p>
             </div>
-            <div className="bg-gray-950 border border-gray-800 rounded-2xl p-3 flex justify-between items-center">
-              <div>
-                <h4 className="text-xs font-bold text-white">E-Book Belajar Coding</h4>
-                <p className="text-[10px] text-gray-400">Panduan lengkap pemula</p>
-              </div>
-              <span className="text-xs font-extrabold text-pink-400">Rp50rb</span>
+          ) : storeData.length > 0 ? (
+            <div className="space-y-3 mb-6">
+              {storeData.map((item, index) => (
+                <div key={index} className="bg-gray-950 border border-gray-800 rounded-2xl p-3 flex items-center gap-3">
+                  {item.image && (
+                    <img 
+                      src={item.image} 
+                      alt={item.title || item.name} 
+                      className="w-14 h-14 object-cover rounded-xl bg-gray-900 border border-gray-800 flex-shrink-0" 
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-bold text-white truncate">{item.title || item.name}</h4>
+                    <p className="text-[10px] text-gray-400 line-clamp-2 mt-0.5">{item.description || item.desc}</p>
+                  </div>
+                  {item.price && (
+                    <span className="text-xs font-extrabold text-pink-400 whitespace-nowrap px-2">
+                      {formatRupiah(item.price)}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <p className="text-xs text-gray-500 text-center py-6">Tidak ada produk tersedia.</p>
+          )}
 
           <div className="modal-action mt-0">
             <form method="dialog" className="w-full">
@@ -169,8 +285,8 @@ export default function Link() {
 
       {/* Modal Gallery */}
       <dialog id="gallery_modal" className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-left">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-left max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center gap-2 mb-2">
             <FaImages className="w-5 h-5 text-indigo-400" />
             <h3 className="font-bold text-base text-white">Gallery Momen</h3>
           </div>
@@ -178,14 +294,38 @@ export default function Link() {
             Beberapa potret dokumentasi kegiatan dan hobi:
           </p>
 
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <div className="h-28 rounded-2xl bg-gray-950 border border-gray-800 overflow-hidden flex items-center justify-center text-gray-600 text-xs font-medium">
-              Foto 1
+          {isGalleryLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <IoReload className="w-6 h-6 text-indigo-500 animate-spin mb-2" />
+              <p className="text-xs text-gray-400">Memuat gallery...</p>
             </div>
-            <div className="h-28 rounded-2xl bg-gray-950 border border-gray-800 overflow-hidden flex items-center justify-center text-gray-600 text-xs font-medium">
-              Foto 2
+          ) : galleryData.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              {galleryData.map((item, index) => {
+                const imgUrl = item.url_Image || item.url || item;
+                return (
+                  <div 
+                    key={index} 
+                    onClick={() => handleOpenImageZoom(imgUrl)}
+                    className="h-32 rounded-2xl bg-gray-950 border border-gray-800 overflow-hidden relative group cursor-pointer flex items-center justify-center"
+                    title="Klik untuk memperbesar"
+                  >
+                    <img 
+                      src={imgUrl} 
+                      alt={`Gallery ${index + 1}`} 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-xs font-semibold">
+                      <FaSearchPlus className="w-4 h-4" />
+                      <span>Zoom</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          ) : (
+            <p className="text-xs text-gray-500 text-center py-6">Tidak ada foto gallery tersedia.</p>
+          )}
 
           <div className="modal-action mt-0">
             <form method="dialog" className="w-full">
@@ -202,25 +342,48 @@ export default function Link() {
 
       {/* Modal Donasi */}
       <dialog id="donation_modal" className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+        <div className="modal-box bg-gray-900 border border-gray-800 text-white rounded-3xl p-6 shadow-2xl text-center relative">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
             <FaHeart className="w-6 h-6" />
           </div>
-          <h3 className="font-bold text-lg text-white mb-2">Terima Kasih atas Dukungannya!</h3>
-          <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+          <h3 className="font-bold text-lg text-white mb-1">Terima Kasih atas Dukungannya!</h3>
+          <p className="text-xs text-gray-400 mb-4 leading-relaxed">
             Dukungan Anda sangat membantu saya untuk terus semangat berkarya.
           </p>
 
-          <div className="bg-gray-950 border border-gray-800 rounded-2xl p-4 mb-6 text-left space-y-3">
+          <div className="bg-gray-950 border border-gray-800 rounded-2xl p-4 mb-4 text-center space-y-3">
+            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">
+              Scan QRIS / Transfer Bank
+            </span>
+            
+            <div 
+              onClick={handleOpenZoom}
+              className="w-44 h-44 mx-auto bg-white p-2 rounded-xl flex items-center justify-center shadow-md relative group cursor-pointer"
+              title="Klik untuk memperbesar"
+            >
+              <img 
+                src={qrisImg} 
+                alt="QRIS Donasi" 
+                className="w-full h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105" 
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white gap-1 text-xs font-semibold">
+                <FaSearchPlus className="w-4 h-4" />
+                <span>Zoom</span>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-300 font-mono pt-1">
+              BCA: 1234567890 <br/>
+              <span className="text-gray-400 font-sans text-[11px]">a.n. Muhammad Fikri</span>
+            </div>
+          </div>
+
+          <div className="bg-gray-950 border border-gray-800 rounded-2xl p-3 mb-6 text-left flex items-center justify-between">
             <div>
               <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">Saweria / Trakteer</span>
-              <a href="https://saweria.co" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-pink-400 hover:underline">
+              <a href="https://saweria.co/mfikria" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-pink-400 hover:underline">
                 saweria.co/mfikria
               </a>
-            </div>
-            <div>
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold block">QRIS / Transfer Bank</span>
-              <p className="text-xs text-gray-300 font-mono">BCA: 1234567890 a.n. Muhammad Fikri</p>
             </div>
           </div>
 
@@ -232,10 +395,60 @@ export default function Link() {
             </form>
           </div>
         </div>
+
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
       </dialog>
+
+      {/* Lightbox / Fullscreen Zoom Overlay untuk QRIS */}
+      {isZoomed && (
+        <div 
+          onClick={handleCloseZoom} 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-zoom-out animate-fadeIn"
+        >
+          <button 
+            onClick={handleCloseZoom}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-pink-600 transition-colors shadow-lg"
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
+          
+          <div className="bg-white p-3 rounded-2xl shadow-2xl max-w-sm w-full mx-4 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={qrisImg} 
+              alt="QRIS Zoomed" 
+              className="w-full h-auto object-contain rounded-xl" 
+            />
+            <p className="text-center text-gray-800 text-xs font-bold mt-3">
+              Scan QRIS untuk berdonasi
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Fullscreen Zoom Overlay untuk Gallery */}
+      {selectedImage && (
+        <div 
+          onClick={handleCloseImageZoom} 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-zoom-out animate-fadeIn"
+        >
+          <button 
+            onClick={handleCloseImageZoom}
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors shadow-lg"
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
+          
+          <div className="bg-gray-900 border border-gray-800 p-3 rounded-2xl shadow-2xl max-w-md w-full mx-4 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={selectedImage} 
+              alt="Gallery Zoomed" 
+              className="w-full h-auto max-h-[75vh] object-contain rounded-xl bg-black" 
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

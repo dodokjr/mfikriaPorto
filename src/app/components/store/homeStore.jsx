@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FooterStore from './FooterStore';
+import NavbarStore from "./NavbarStore.jsx";
+import AboutMe from "./AboutMe.jsx";
+import FeedbackStore from "./FeedbackStore.jsx";
 
 // ==========================================
 // UTILS: Helper Function untuk Format Harga
@@ -10,35 +13,31 @@ export const formatPrice = (price) => {
 };
 
 export default function HomeStore({ products = [] }) {
-  // State Keranjang Belanja
+  // Force default to dark mode for the true Starboy look, but keep toggle capability
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCartIds, setSelectedCartIds] = useState([]);
   const [checkoutSummary, setCheckoutSummary] = useState(null);
 
-  // State Lightbox & Qty
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [fullscreenQty, setFullscreenQty] = useState(1);
   const [detailQty, setDetailQty] = useState(1);
 
-  // State Dark Mode & Pop-up Chat
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([
-    { id: 1, sender: 'bot', text: 'Halo! Ada yang bisa kami bantu mengenai produk LOS BRAND?' }
+    { id: 1, sender: 'bot', text: 'LOS BRAND // System online. State your inquiry.' }
   ]);
   const chatBottomRef = useRef(null);
 
-  // Auto scroll ke pesan chat terbaru
   useEffect(() => {
     if (isChatOpen) {
       chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, isChatOpen]);
 
-  // Handler Kirim Pesan Chat
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
@@ -47,20 +46,18 @@ export default function HomeStore({ products = [] }) {
     setChatMessages((prev) => [...prev, userMsg]);
     setChatInput('');
 
-    // Simulasi Balasan Otomatis Admin/Bot
     setTimeout(() => {
       setChatMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: 'Terima kasih atas pesan Anda! Tim CS kami akan segera membalasnya.'
+          text: 'Transmission received. Support unit will establish connection shortly.'
         }
       ]);
     }, 1000);
   };
 
-  // Cart Handlers
   const addToCart = (product, customQuantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -133,129 +130,98 @@ export default function HomeStore({ products = [] }) {
   };
 
   return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 relative ${isDarkMode ? 'bg-gray-950 text-gray-100' : 'bg-gray-50 text-gray-800'}`}>
+    <div className={`min-h-screen font-sans tracking-tight transition-colors duration-500 relative ${isDarkMode ? 'bg-[#0a0a0c] text-neutral-100 selection:bg-neutral-100 selection:text-black' : 'bg-neutral-50 text-neutral-900 selection:bg-black selection:text-white'}`}>
       
-      {/* Header Responsif dengan Darkmode di Tengah */}
-      <header className={`sticky top-0 z-30 border-b shadow-sm transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 grid grid-cols-3 items-center">
-          
-          {/* Bagian Kiri: Logo & Navigasi */}
-          <div className="flex items-center gap-2 sm:gap-6 justify-start">
-            <h1 className="text-base sm:text-xl font-black tracking-tight text-indigo-500 whitespace-nowrap">LOS BRAND</h1>
-            <a
-              href="/app"
-              className={`text-xs sm:text-sm font-semibold transition flex items-center gap-1 ${isDarkMode ? 'text-gray-300 hover:text-indigo-400' : 'text-gray-600 hover:text-indigo-600'}`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span className="hidden xs:inline">Home</span>
-            </a>
-          </div>
+      {/* Navbar Integration */}
+      <NavbarStore 
+        isDarkMode={isDarkMode} 
+        setIsDarkMode={setIsDarkMode} 
+        totalItems={totalItems} 
+        setIsCartOpen={setIsCartOpen} 
+      />
 
-          {/* Bagian Tengah: Tombol Dark Mode Toggle (Presisi di Tengah) */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 shadow-sm ${
-                isDarkMode 
-                  ? 'bg-gray-800 border-gray-700 text-yellow-400 hover:bg-gray-700' 
-                  : 'bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <span>{isDarkMode ? '☀️' : '🌙'}</span>
-              <span className="hidden sm:inline">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-          </div>
-
-          {/* Bagian Kanan: Ruang Penyeimbang / Bantuan */}
-          <div className="flex justify-end">
-            {/* Ruang penyeimbang grid agar Darkmode tetap di tengah */}
-          </div>
-
-        </div>
-      </header>
-
-      {/* Floating Cart Button & Drawer Responsif */}
-      <div className="fixed top-3 right-3 sm:right-4 z-40 flex flex-col items-end">
+      {/* Floating Cart Button */}
+      <div className="fixed top-3 right-3 sm:right-6 z-40 flex flex-col items-end">
         <button
           onClick={() => setIsCartOpen(!isCartOpen)}
-          className="relative bg-gray-900 text-white px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold hover:bg-gray-800 transition shadow-lg flex items-center gap-1.5 sm:gap-2 border border-gray-700"
+          className={`relative px-4 py-2 rounded-full text-xs font-mono uppercase tracking-wider backdrop-blur-md transition-all duration-300 flex items-center gap-2 border ${
+            isDarkMode 
+              ? 'bg-neutral-900/80 border-neutral-800 text-white hover:border-neutral-600 shadow-[0_0_20px_rgba(0,0,0,0.8)]' 
+              : 'bg-white/80 border-neutral-200 text-neutral-900 hover:border-neutral-400 shadow-lg'
+          }`}
         >
-          <span>🛒</span>
-          <span className="hidden sm:inline">Cart</span>
-          <span className="bg-indigo-600 text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full font-bold">
+          <span className="text-[10px]">⚡</span>
+          <span>Cart</span>
+          <span className="bg-white text-black dark:bg-neutral-100 dark:text-black text-[10px] px-1.5 py-0.2 rounded-full font-bold">
             {totalItems}
           </span>
         </button>
 
         {isCartOpen && (
-          <div className={`mt-2 border rounded-2xl p-4 sm:p-5 shadow-2xl w-[90vw] max-w-xs sm:max-w-none sm:w-96 animate-in fade-in slide-in-from-top-2 duration-200 ${
-            isDarkMode ? 'bg-gray-900 border-gray-800 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+          <div className={`mt-2 border rounded-xl p-4 sm:p-5 shadow-2xl w-[90vw] max-w-xs sm:w-96 backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-300 ${
+            isDarkMode ? 'bg-neutral-950/95 border-neutral-800 text-neutral-100' : 'bg-white/95 border-neutral-200 text-neutral-900'
           }`}>
-            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-800">
-              <h3 className="text-sm sm:text-base font-bold">Shopping Cart</h3>
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-neutral-800/40">
+              <h3 className="text-xs uppercase font-mono tracking-widest text-neutral-400">Bag // {totalItems} items</h3>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold p-1"
+                className="text-neutral-500 hover:text-white text-xs font-mono transition"
               >
-                ✕
+                [ESC]
               </button>
             </div>
 
             {cart.length === 0 ? (
-              <p className="text-gray-500 text-xs sm:text-sm text-center py-6">Your cart is empty.</p>
+              <p className="text-neutral-500 text-xs font-mono text-center py-8">Bag is currently empty.</p>
             ) : (
               <>
-                <div className="flex items-center gap-2 pb-2 mb-2 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-2 pb-2 mb-2 border-b border-neutral-800/40">
                   <input
                     type="checkbox"
                     id="select-all"
                     checked={cart.length > 0 && selectedCartIds.length === cart.length}
                     onChange={toggleSelectAll}
-                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                    className="w-3.5 h-3.5 accent-white rounded bg-transparent border-neutral-700 cursor-pointer"
                   />
-                  <label htmlFor="select-all" className="text-xs font-semibold cursor-pointer select-none">
-                    Pilih Semua ({selectedCartIds.length}/{cart.length})
+                  <label htmlFor="select-all" className="text-[11px] font-mono text-neutral-400 cursor-pointer select-none">
+                    Select All ({selectedCartIds.length}/{cart.length})
                   </label>
                 </div>
 
-                <ul className="divide-y divide-gray-100 dark:divide-gray-800 max-h-60 sm:max-h-72 overflow-y-auto pr-1 mb-3 space-y-2">
+                <ul className="divide-y divide-neutral-900 max-h-60 overflow-y-auto pr-1 mb-3 space-y-2">
                   {cart.map((item) => {
                     const isChecked = selectedCartIds.includes(item.id);
 
                     return (
-                      <li key={item.id} className="pt-2 flex gap-2 items-center text-xs sm:text-sm">
+                      <li key={item.id} className="pt-2 flex gap-3 items-center text-xs">
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelectCartItem(item.id)}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                          className="w-3.5 h-3.5 accent-white rounded bg-transparent border-neutral-700 cursor-pointer"
                         />
 
                         <img 
                           src={item.image} 
                           alt={item.name} 
-                          className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg border flex-shrink-0 dark:border-gray-700"
+                          className="w-11 h-11 object-cover rounded-md border border-neutral-800 flex-shrink-0"
                         />
 
                         <div className="flex-1 min-w-0">
-                          <span className="font-semibold block truncate text-xs">
-                            {item.name}
-                          </span>
-                          <span className="text-gray-500 text-[11px]">Rp {formatPrice(item.price)}</span>
+                          <span className="font-medium block truncate text-xs">{item.name}</span>
+                          <span className="text-neutral-500 font-mono text-[10px]">Rp {formatPrice(item.price)}</span>
                           
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-2 mt-1">
                             <button
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="w-5 h-5 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded text-xs font-bold"
+                              className="w-5 h-5 flex items-center justify-center bg-neutral-900 border border-neutral-800 rounded text-[10px] font-mono hover:border-neutral-600 transition"
                             >
                               -
                             </button>
-                            <span className="text-xs font-semibold px-1">{item.qty}</span>
+                            <span className="text-[11px] font-mono">{item.qty}</span>
                             <button
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="w-5 h-5 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded text-xs font-bold"
+                              className="w-5 h-5 flex items-center justify-center bg-neutral-900 border border-neutral-800 rounded text-[10px] font-mono hover:border-neutral-600 transition"
                             >
                               +
                             </button>
@@ -263,14 +229,14 @@ export default function HomeStore({ products = [] }) {
                         </div>
 
                         <div className="flex flex-col items-end gap-1">
-                          <span className="font-bold text-xs">
+                          <span className="font-mono text-xs font-semibold">
                             Rp {formatPrice(item.price * item.qty)}
                           </span>
                           <button
                             onClick={() => removeFromCart(item.id)}
-                            className="text-red-500 hover:text-red-700 text-[11px] font-medium"
+                            className="text-neutral-500 hover:text-red-400 font-mono text-[10px] transition"
                           >
-                            Hapus
+                            Remove
                           </button>
                         </div>
                       </li>
@@ -278,21 +244,21 @@ export default function HomeStore({ products = [] }) {
                   })}
                 </ul>
 
-                <div className="border-t dark:border-gray-800 pt-3 flex justify-between font-bold text-xs sm:text-sm mb-3">
-                  <span>Total ({selectedItems.reduce((acc, curr) => acc + curr.qty, 0)} barang):</span>
-                  <span className="text-indigo-500">Rp {formatPrice(selectedTotalPrice)}</span>
+                <div className="border-t border-neutral-800/60 pt-3 flex justify-between font-mono text-xs mb-3">
+                  <span className="text-neutral-400">Total:</span>
+                  <span className="font-bold">Rp {formatPrice(selectedTotalPrice)}</span>
                 </div>
 
                 <button 
                   onClick={handleCheckout}
                   disabled={selectedItems.length === 0}
-                  className={`w-full py-2.5 rounded-xl font-medium transition text-xs sm:text-sm shadow flex items-center justify-center gap-2 ${
+                  className={`w-full py-2.5 rounded-lg font-mono text-xs uppercase tracking-wider transition ${
                     selectedItems.length > 0 
-                      ? 'bg-green-600 hover:bg-green-700 text-white' 
-                      : 'bg-gray-300 dark:bg-gray-800 text-gray-500 cursor-not-allowed'
+                      ? 'bg-white text-black hover:bg-neutral-200 shadow-[0_0_15px_rgba(255,255,255,0.2)]' 
+                      : 'bg-neutral-900 text-neutral-600 cursor-not-allowed border border-neutral-800'
                   }`}
                 >
-                  <span>Checkout Now ({selectedItems.length})</span>
+                  Proceed to Checkout ({selectedItems.length})
                 </button>
               </>
             )}
@@ -300,30 +266,29 @@ export default function HomeStore({ products = [] }) {
         )}
       </div>
 
-      {/* Hero Banner Responsif */}
-      <section className="bg-gradient-to-r from-gray-900 via-indigo-950 to-gray-900 text-white py-10 md:py-16 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-3 md:space-y-4 max-w-xl text-center md:text-left">
-            <span className="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 text-[11px] sm:text-xs font-semibold rounded-full border border-indigo-500/30">
-              New Apparel Collection
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight">
-              Simple Style, Premium Quality.
-            </h2>
-            <p className="text-gray-300 text-xs sm:text-sm md:text-base leading-relaxed">
-              Temukan pakaian bergaya minimalis modern dengan potongan presisi dan bahan premium berkualitas tinggi.
-            </p>
+      {/* Hero Section - Starboy Cinematic Vibe */}
+      <section className="relative overflow-hidden py-16 md:py-24 px-4 border-b border-neutral-900">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] pointer-events-none"></div>
+        <div className="max-w-5xl mx-auto flex flex-col items-center text-center space-y-4 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 text-[10px] font-mono uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            LOS BRAND // Fall-Winter Archive
           </div>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase">
+            No Rules. Pure Form.
+          </h1>
+          <p className="text-neutral-400 text-xs sm:text-sm max-w-md font-mono">
+            Minimalist architecture translated into wearable heavy-weight apparel. Designed for the nocturnal aesthetic.
+          </p>
         </div>
       </section>
 
-      {/* Main Content - Grid Responsif (1 Col HP, 2 Col Tablet, 4 Col Desktop) */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold">Featured Products</h2>
+      {/* Main Content Products */}
+      <main className="max-w-6xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xs uppercase font-mono tracking-widest text-neutral-400">Catalog // Products</h2>
         </div>
 
-        {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {products?.map((product) => {
             const itemQty = getItemQtyInCart(product.id);
@@ -331,13 +296,13 @@ export default function HomeStore({ products = [] }) {
             return (
               <div 
                 key={product.id} 
-                className={`border rounded-xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition ${
-                  isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+                className={`group border rounded-xl overflow-hidden flex flex-col justify-between transition-all duration-300 ${
+                  isDarkMode ? 'bg-neutral-950 border-neutral-900 hover:border-neutral-700' : 'bg-white border-neutral-200 hover:border-neutral-400'
                 }`}
               >
                 <div>
                   <div 
-                    className="relative group cursor-pointer" 
+                    className="relative cursor-pointer overflow-hidden bg-neutral-900 aspect-[4/5]" 
                     onClick={() => {
                       setFullscreenImage(product);
                       setFullscreenQty(1);
@@ -346,33 +311,33 @@ export default function HomeStore({ products = [] }) {
                     <img 
                       src={product.image} 
                       alt={product.name} 
-                      className="w-full h-48 sm:h-52 object-cover group-hover:scale-105 transition duration-300" 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90 group-hover:opacity-100 grayscale-[20%] group-hover:grayscale-0" 
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                      <span className="bg-white/90 text-gray-900 text-xs font-semibold px-3 py-1.5 rounded-full shadow flex items-center gap-1.5 backdrop-blur-sm">
-                        🔍 View Fullscreen
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition backdrop-blur-[2px]">
+                      <span className="border border-white/20 bg-black/60 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-full shadow backdrop-blur-md">
+                        View Item
                       </span>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-medium text-base sm:text-lg leading-snug">{product.name}</h3>
-                    <p className="text-gray-500 text-xs sm:text-sm mt-0.5">{product.category}</p>
-                    <p className="text-indigo-500 font-bold mt-1.5 text-sm sm:text-base">Rp {formatPrice(product.price)}</p>
+                  <div className="p-4 space-y-1">
+                    <span className="text-[10px] font-mono text-neutral-500 uppercase">{product.category}</span>
+                    <h3 className="font-medium text-sm sm:text-base tracking-tight truncate">{product.name}</h3>
+                    <p className="font-mono font-semibold text-xs text-neutral-200">Rp {formatPrice(product.price)}</p>
                   </div>
                 </div>
 
                 <div className="p-4 pt-0 space-y-2">
                   <div className="relative">
                     {itemQty > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900 shadow z-10 animate-in zoom-in-50">
+                      <span className="absolute -top-2 -right-2 bg-white text-black dark:bg-white dark:text-black text-[9px] font-mono font-bold w-4 h-4 rounded-full flex items-center justify-center shadow z-10">
                         {itemQty}
                       </span>
                     )}
                     <button
                       onClick={() => addToCart(product, 1)}
-                      className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition text-xs sm:text-sm"
+                      className="w-full bg-neutral-900 hover:bg-white hover:text-black text-white border border-neutral-800 py-2 rounded-lg font-mono text-xs uppercase tracking-wider transition-all duration-300"
                     >
-                      Add to Cart
+                      + Add
                     </button>
                   </div>
 
@@ -381,11 +346,9 @@ export default function HomeStore({ products = [] }) {
                       setSelectedProduct(product);
                       setDetailQty(1);
                     }}
-                    className={`w-full py-2 rounded-lg font-medium transition text-xs sm:text-sm ${
-                      isDarkMode ? 'bg-gray-800 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
+                    className="w-full py-2 rounded-lg font-mono text-[11px] uppercase tracking-wider text-neutral-400 hover:text-white transition bg-transparent hover:bg-neutral-900"
                   >
-                    Detail
+                    Quick View
                   </button>
                 </div>
               </div>
@@ -394,22 +357,22 @@ export default function HomeStore({ products = [] }) {
         </div>
       </main>
 
-      {/* Product Detail Modal Responsif */}
+      {/* Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className={`rounded-2xl max-w-lg w-full overflow-hidden shadow-xl relative max-h-[90vh] overflow-y-auto ${
-            isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className={`rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative border ${
+            isDarkMode ? 'bg-neutral-950 border-neutral-800 text-neutral-100' : 'bg-white border-neutral-200 text-neutral-900'
           }`}>
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-3 right-3 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 z-10 font-bold"
+              className="absolute top-3 right-3 bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center z-10 font-mono text-xs"
             >
               ✕
             </button>
 
-            <div className="p-5 sm:p-6">
+            <div className="p-5 sm:p-6 space-y-4">
               <div 
-                className="relative group cursor-pointer rounded-xl overflow-hidden mb-4"
+                className="relative cursor-pointer rounded-xl overflow-hidden aspect-square bg-neutral-900"
                 onClick={() => {
                   setFullscreenImage(selectedProduct);
                   setFullscreenQty(detailQty);
@@ -418,58 +381,52 @@ export default function HomeStore({ products = [] }) {
                 <img
                   src={selectedProduct.image}
                   alt={selectedProduct.name}
-                  className="w-full h-52 sm:h-64 object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
-              <span className="text-[11px] font-semibold px-2.5 py-1 bg-indigo-500/10 text-indigo-500 rounded-md">
-                {selectedProduct.category || 'Apparel'}
-              </span>
-              <h3 className="text-lg sm:text-xl font-bold mt-2">{selectedProduct.name}</h3>
-              <p className="text-base sm:text-lg font-bold text-indigo-500 mt-1">
-                Rp {formatPrice(selectedProduct.price)}
-              </p>
-              
-              <p className="text-gray-400 text-xs sm:text-sm mt-3 leading-relaxed">
-                Detail kaos berbahan cotton premium yang nyaman dipakai harian dengan potongan reguler modern.
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">
+                  {selectedProduct.category || 'Apparel'}
+                </span>
+                <h3 className="text-base sm:text-lg font-semibold">{selectedProduct.name}</h3>
+                <p className="font-mono text-sm text-neutral-300">
+                  Rp {formatPrice(selectedProduct.price)}
+                </p>
+              </div>
+
+              <p className="text-neutral-400 text-xs font-mono leading-relaxed">
+                Heavyweight combed cotton, custom minimalist typography print, relaxed structured silhouette.
               </p>
 
-              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-semibold">Jumlah Pembelian:</span>
-                <div className={`flex items-center gap-2.5 p-1 rounded-xl border ${
-                  isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
-                }`}>
+              <div className="pt-2 border-t border-neutral-900 flex items-center justify-between">
+                <span className="text-xs font-mono text-neutral-400">Quantity:</span>
+                <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 p-1 rounded-lg">
                   <button
                     onClick={() => setDetailQty((prev) => Math.max(1, prev - 1))}
-                    className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg font-bold text-xs shadow-sm transition"
+                    className="w-6 h-6 flex items-center justify-center bg-neutral-800 rounded font-mono text-xs"
                   >
                     -
                   </button>
-                  <span className="font-extrabold text-xs sm:text-sm w-5 text-center">{detailQty}</span>
+                  <span className="font-mono text-xs w-4 text-center">{detailQty}</span>
                   <button
                     onClick={() => setDetailQty((prev) => prev + 1)}
-                    className="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg font-bold text-xs shadow-sm transition"
+                    className="w-6 h-6 flex items-center justify-center bg-neutral-800 rounded font-mono text-xs"
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              <div className="mt-5 flex gap-2.5">
+              <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => {
                     addToCart(selectedProduct, detailQty);
                     setSelectedProduct(null);
                   }}
-                  className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-medium hover:bg-indigo-700 transition text-xs sm:text-sm"
+                  className="flex-1 bg-white text-black hover:bg-neutral-200 py-2.5 rounded-lg font-mono text-xs uppercase tracking-wider transition font-bold"
                 >
-                  Tambah ke Keranjang ({detailQty})
-                </button>
-
-                <button
-                  onClick={() => setSelectedProduct(null)}
-                  className="px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition text-xs sm:text-sm"
-                >
-                  Tutup
+                  Add to Cart ({detailQty})
                 </button>
               </div>
             </div>
@@ -477,171 +434,147 @@ export default function HomeStore({ products = [] }) {
         </div>
       )}
 
-      {/* Lightbox Fullscreen Responsif (Tombol Cart & Qty Lengkap) */}
+      {/* Lightbox Fullscreen View */}
       {fullscreenImage && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setFullscreenImage(null)}
         >
-          <div className="relative w-full h-full max-w-4xl flex flex-col items-center justify-between py-4" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Tombol Tutup Fullscreen */}
+          <div className="relative w-full h-full max-w-4xl flex flex-col items-center justify-between py-6" onClick={(e) => e.stopPropagation()}>
             <div className="w-full flex justify-end">
               <button
                 onClick={() => setFullscreenImage(null)}
-                className="bg-white/20 hover:bg-white/40 text-white w-9 h-9 sm:w-10 sm:h-10 rounded-full font-bold flex items-center justify-center transition"
+                className="bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white w-10 h-10 rounded-full font-mono flex items-center justify-center transition"
               >
                 ✕
               </button>
             </div>
 
-            {/* Gambar Fullscreen */}
             <div className="flex-1 flex items-center justify-center my-auto overflow-hidden py-2">
               <img 
                 src={fullscreenImage.image} 
                 alt={fullscreenImage.name} 
-                className="max-h-[50vh] sm:max-h-[65vh] md:max-h-[70vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl" 
+                className="max-h-[60vh] w-auto max-w-full object-contain rounded-xl shadow-2xl border border-neutral-900" 
               />
             </div>
 
-            {/* Panel Kontrol Bawah Responsif */}
-            <div className="bg-gray-900/95 border border-gray-800 p-3.5 sm:p-4 rounded-2xl w-full max-w-md flex flex-col sm:flex-row items-center justify-between gap-3 text-white backdrop-blur-md shadow-2xl mt-auto">
-              <div className="text-center sm:text-left w-full sm:w-auto">
-                <h4 className="font-bold text-xs sm:text-sm leading-tight truncate max-w-[200px] sm:max-w-none">{fullscreenImage.name}</h4>
-                <p className="text-indigo-400 font-extrabold text-xs sm:text-sm mt-0.5">Rp {formatPrice(fullscreenImage.price)}</p>
+            <div className="bg-neutral-950 border border-neutral-800 p-4 rounded-xl w-full max-w-md flex flex-col sm:flex-row items-center justify-between gap-3 text-white backdrop-blur-md shadow-2xl">
+              <div className="text-center sm:text-left">
+                <h4 className="font-medium text-xs tracking-tight truncate max-w-[200px]">{fullscreenImage.name}</h4>
+                <p className="font-mono text-xs text-neutral-400 mt-0.5">Rp {formatPrice(fullscreenImage.price)}</p>
               </div>
 
-              <div className="flex items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
-                {/* Selector Qty */}
-                <div className="flex items-center gap-1.5 bg-gray-800 border border-gray-700 p-1 rounded-xl">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-neutral-900 border border-neutral-800 p-1 rounded-lg">
                   <button
                     onClick={() => setFullscreenQty((prev) => Math.max(1, prev - 1))}
-                    className="w-7 h-7 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-lg font-bold text-xs"
+                    className="w-6 h-6 flex items-center justify-center bg-neutral-800 rounded font-mono text-xs"
                   >
                     -
                   </button>
-                  <span className="font-bold text-xs w-4 text-center">{fullscreenQty}</span>
+                  <span className="font-mono text-xs w-4 text-center">{fullscreenQty}</span>
                   <button
                     onClick={() => setFullscreenQty((prev) => prev + 1)}
-                    className="w-7 h-7 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-lg font-bold text-xs"
+                    className="w-6 h-6 flex items-center justify-center bg-neutral-800 rounded font-mono text-xs"
                   >
                     +
                   </button>
                 </div>
 
-                {/* Tombol Add to Cart Fullscreen */}
                 <button
                   onClick={() => {
                     addToCart(fullscreenImage, fullscreenQty);
                     setFullscreenImage(null);
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs transition flex items-center gap-1.5 shadow-lg whitespace-nowrap"
+                  className="bg-white text-black hover:bg-neutral-200 px-4 py-2 rounded-lg font-mono text-xs uppercase tracking-wider transition font-bold"
                 >
-                  <span>🛒 Add ({fullscreenQty})</span>
+                  Add ({fullscreenQty})
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* Modal Checkout Success Responsif */}
+      {/* Checkout Success Modal */}
       {checkoutSummary && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className={`rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative ${
-            isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'
-          }`}>
-            <div className="text-center mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-2 text-xl sm:text-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="rounded-2xl max-w-md w-full p-6 shadow-2xl relative border bg-neutral-950 border-neutral-800 text-neutral-100">
+            <div className="text-center mb-4 space-y-2">
+              <div className="w-10 h-10 bg-neutral-900 border border-neutral-800 text-white rounded-full flex items-center justify-center mx-auto text-sm font-mono">
                 ✓
               </div>
-              <h3 className="text-lg sm:text-xl font-black">Pesanan Berhasil Disiapkan!</h3>
+              <h3 className="text-base font-semibold tracking-tight">Order Confirmed</h3>
+              <p className="text-[11px] font-mono text-neutral-500">Transmission sequence finalized successfully.</p>
             </div>
 
-            <div className="border dark:border-gray-800 rounded-xl divide-y dark:divide-gray-800 max-h-52 overflow-y-auto mb-4 bg-gray-50 dark:bg-gray-950">
+            <div className="border border-neutral-900 rounded-xl divide-y divide-neutral-900 max-h-48 overflow-y-auto mb-4 bg-neutral-900/30">
               {checkoutSummary.items.map((item) => (
-                <div key={item.id} className="p-2.5 flex items-center justify-between text-xs sm:text-sm">
+                <div key={item.id} className="p-2.5 flex items-center justify-between text-xs font-mono">
                   <div className="flex items-center gap-2.5">
-                    <img src={item.image} alt={item.name} className="w-9 h-9 object-cover rounded-md border dark:border-gray-800" />
+                    <img src={item.image} alt={item.name} className="w-8 h-8 object-cover rounded border border-neutral-800" />
                     <div>
-                      <p className="font-semibold leading-tight truncate max-w-[130px] sm:max-w-none">{item.name}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">Rp {formatPrice(item.price)} x {item.qty}</p>
+                      <p className="font-medium truncate max-w-[120px]">{item.name}</p>
+                      <p className="text-[10px] text-neutral-500">Rp {formatPrice(item.price)} × {item.qty}</p>
                     </div>
                   </div>
-                  <span className="font-bold text-xs">Rp {formatPrice(item.price * item.qty)}</span>
+                  <span>Rp {formatPrice(item.price * item.qty)}</span>
                 </div>
               ))}
             </div>
 
-            <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3 flex justify-between items-center mb-5">
-              <span className="text-xs sm:text-sm font-bold">Total Pembayaran:</span>
-              <span className="text-sm sm:text-base font-black text-indigo-500">Rp {formatPrice(checkoutSummary.total)}</span>
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-3 flex justify-between items-center mb-4 font-mono text-xs">
+              <span className="text-neutral-400">Total Settlement:</span>
+              <span className="font-bold">Rp {formatPrice(checkoutSummary.total)}</span>
             </div>
 
             <button
               onClick={() => setCheckoutSummary(null)}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2.5 rounded-xl text-xs sm:text-sm transition"
+              className="w-full bg-white text-black hover:bg-neutral-200 font-mono text-xs uppercase tracking-wider py-2.5 rounded-lg transition font-bold"
             >
-              Selesai & Tutup
+              Close Terminal
             </button>
           </div>
         </div>
       )}
 
-      {/* POP-UP CHAT WIDGET Responsif */}
-      <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40">
+      {/* Minimalist Futuristic Chat Widget */}
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
         {!isChatOpen ? (
           <button
             onClick={() => setIsChatOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center text-xl sm:text-2xl transition hover:scale-105 relative"
-            title="Tanya CS"
+            className="bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-800 w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition hover:scale-105 relative"
+            title="Open Support Terminal"
           >
-            💬
-            <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            <span className="font-mono text-xs">_</span>
+            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-black"></span>
           </button>
         ) : (
-          <div className={`w-[88vw] max-w-xs sm:max-w-none sm:w-96 rounded-2xl shadow-2xl border flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 ${
-            isDarkMode ? 'bg-gray-900 border-gray-800 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
-          }`}>
-            {/* Header Chat */}
-            <div className="bg-indigo-600 text-white p-3.5 flex justify-between items-center">
+          <div className="w-[88vw] max-w-xs sm:w-80 rounded-xl shadow-2xl border bg-neutral-950 border-neutral-800 text-neutral-100 flex flex-col overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <div className="bg-neutral-900 border-b border-neutral-800 p-3 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="w-7 h-7 rounded-full bg-indigo-800 flex items-center justify-center text-[10px] font-bold">
-                    CS
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 border border-indigo-600 rounded-full"></span>
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold leading-tight">Customer Care</h4>
-                  <p className="text-[9px] sm:text-[10px] text-indigo-200">Online | Balas Cepat</p>
-                </div>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <h4 className="text-[11px] font-mono tracking-widest uppercase">Support // Terminal</h4>
               </div>
               <button 
                 onClick={() => setIsChatOpen(false)}
-                className="text-white hover:text-gray-200 text-base font-bold"
+                className="text-neutral-500 hover:text-white font-mono text-xs"
               >
-                ✕
+                [X]
               </button>
             </div>
 
-            {/* Area Pesan */}
-            <div className={`p-3 h-60 sm:h-72 overflow-y-auto space-y-2.5 text-xs ${
-              isDarkMode ? 'bg-gray-950' : 'bg-gray-50'
-            }`}>
+            <div className="p-3 h-60 overflow-y-auto space-y-2.5 font-mono text-xs bg-black/40">
               {chatMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] p-2.5 sm:p-3 rounded-2xl ${
+                    className={`max-w-[85%] p-2.5 rounded-lg ${
                       msg.sender === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-none'
-                        : isDarkMode 
-                          ? 'bg-gray-800 text-gray-200 rounded-bl-none border border-gray-700' 
-                          : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-200'
+                        ? 'bg-white text-black font-medium'
+                        : 'bg-neutral-900 border border-neutral-800 text-neutral-300'
                     }`}
                   >
                     {msg.text}
@@ -651,33 +584,28 @@ export default function HomeStore({ products = [] }) {
               <div ref={chatBottomRef} />
             </div>
 
-            {/* Input Form */}
-            <form onSubmit={handleSendMessage} className={`p-2.5 border-t flex gap-2 ${
-              isDarkMode ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'
-            }`}>
+            <form onSubmit={handleSendMessage} className="p-2 border-t border-neutral-900 bg-neutral-950 flex gap-2">
               <input
                 type="text"
-                placeholder="Tulis pesan..."
+                placeholder="Type command..."
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                className={`flex-1 text-xs px-3 py-2 rounded-xl border focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-                  isDarkMode 
-                    ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' 
-                    : 'bg-gray-100 border-gray-200 text-gray-800'
-                }`}
+                className="flex-1 font-mono text-xs px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600"
               />
               <button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition"
+                className="bg-white text-black hover:bg-neutral-200 px-3 py-2 rounded-lg font-mono text-xs font-bold transition"
               >
-                Kirim
+                Send
               </button>
             </form>
           </div>
         )}
       </div>
 
-      <FooterStore/>
+      <AboutMe isDarkMode={isDarkMode} />
+      <FeedbackStore isDarkMode={isDarkMode} />
+      <FooterStore isDarkMode={isDarkMode} />
     </div>
   );
 }

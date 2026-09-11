@@ -5,6 +5,10 @@ import InstagramFeed from './components/myHobbies/instagramFeed'
 import Music from './components/myHobbies/music'
 import Games from './components/myHobbies/Games'
 import GamesTwo from './components/myHobbies/GameTwo'
+import GamesThree from './components/myHobbies/GamesThree.jsx'
+import GamesFour from './components/myHobbies/GamesFour.jsx'
+import GamesFive from './components/myHobbies/GamesFive.jsx'
+import GamesSix from './components/myHobbies/GameSix.jsx'
 import { IoReload } from 'react-icons/io5'
 
 export default function MyHobbies() {
@@ -53,7 +57,12 @@ export default function MyHobbies() {
         <div className="max-w-xl mx-auto px-4 py-8 space-y-8">
           <Games />
           <GamesTwo />
+          <GamesThree/>
+          <GamesFour/>
+          <GamesFive/>
+          <GamesSix/>
         </div>
+        
       </main>
     </Layout>
   )

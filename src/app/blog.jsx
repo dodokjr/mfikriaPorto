@@ -3,33 +3,42 @@ import Layout from './layout'
 import BlogCard from './components/blog/blogCard'
 
 export default function Blog() {
-  // Ubah inisialisasi awal menjadi null agar pengecekan loading akurat
   const [data, setData] = useState(null)
+  const [isLoading, setIsLoading] = useState(true) // State khusus untuk status loading API
 
   useEffect(() => {
     fetchData()
   }, [])
 
   const fetchData = async () => {
+    setIsLoading(true)
     try {
       const api = await fetch("https://api-mfikria.vercel.app/mfikria/c/blog")
       const res = await api.json()
       setData(res)
     } catch (error) {
       console.error("Gagal mengambil data blog:", error)
+    } finally {
+      setIsLoading(false) // Matikan loading setelah fetch selesai (baik sukses maupun gagal)
     }
   }
 
-  // Tampilan Loading (Skeleton) yang lebih rapi dan simetris di tengah
-  if (!data) {
+  // Tampilan Loading menggunakan skeleton saat data sedang diambil
+  if (isLoading || !data) {
     return (
       <Layout>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="flex w-full max-w-md flex-col gap-4 p-4">
-            <div className="skeleton h-32 w-full rounded-xl"></div>
-            <div className="skeleton h-6 w-1/3 rounded-lg"></div>
-            <div className="skeleton h-4 w-full rounded-lg"></div>
-            <div className="skeleton h-4 w-2/3 rounded-lg"></div>
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <div className="flex w-full max-w-4xl flex-col gap-6 p-4 animate-pulse">
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-800 rounded w-1/4"></div>
+              <div className="h-8 bg-gray-800 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
+              <div className="h-64 bg-gray-900 border border-gray-800 rounded-xl"></div>
+              <div className="h-64 bg-gray-900 border border-gray-800 rounded-xl"></div>
+              <div className="h-64 bg-gray-900 border border-gray-800 rounded-xl"></div>
+            </div>
           </div>
         </div>
       </Layout>
@@ -56,7 +65,7 @@ export default function Blog() {
               </p>
             </div>
 
-            {/* Quick Navigation / Pills (Opsional jika ingin tetap ditampilkan secara minimalis) */}
+            {/* Quick Navigation / Pills */}
             <div className="flex flex-wrap items-center gap-2">
               {data.data && data.data.map((r, i) => (
                 <a

@@ -13,5 +13,34 @@
   <body>
     <div id="m00tyourPage" class="bg-slate-800"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      async function checkPing(url = 'https://mfikria.vercel.app/assets/Mfikria-D1fUWlBA.svg') {
+  const startTime = performance.now();
+  
+  try {
+    const response = await fetch(url, { 
+      method: 'HEAD', 
+      cache: 'no-store' 
+    });
+    
+    const endTime = performance.now();
+    const latency = Math.round(endTime - startTime);
+    
+    if (response.ok || response.type === 'opaque') {
+      console.log(`🟢 Ping berhasil! Latency: ${latency} ms`);
+      return latency;
+    } else {
+      console.warn(`🟡 Server merespons tetapi dengan error status: ${response.status}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`🔴 Ping gagal (Offline atau CORS error):`, error);
+    return false;
+  }
+}
+
+// Contoh pemanggilan fungsi
+checkPing();
+    </script>
   </body>
 </html>

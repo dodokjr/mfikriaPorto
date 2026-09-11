@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaArrowUp, FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa6";
+import RealtimePingAlert from './RealtimePingAlert'
 
 const Footer = () => {
   const scrollToTop = () => {

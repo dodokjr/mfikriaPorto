@@ -2,45 +2,175 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./src/assets/faicons.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+    <!-- ===== SEO dasar ===== -->
+    <title>Muhammad Fikria Ardiyansah | Portofolio Web Developer</title>
+    <meta
+      name="description"
+      content="Portofolio Muhammad Fikria Ardiyansah: kumpulan proyek, blog, dan hobi. Lihat karya web developer asal Indonesia dan hubungi untuk kerja sama."
+    />
+    <meta
+      name="keywords"
+      content="Muhammad Fikria Ardiyansah, Fikria, mfikria, portofolio, web developer, React, proyek, blog"
+    />
+    <meta name="author" content="Muhammad Fikria Ardiyansah" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <link rel="canonical" href="https://mfikria.vercel.app/" />
+    <meta name="theme-color" content="#1e293b" />
+ 
+    <!-- Ikon dan PWA (install app) -->
+    <link rel="icon" type="image/png" href="./src/assets/faicons.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="mfikria" />
+ 
+    <!-- ===== Open Graph (Facebook, WhatsApp, LinkedIn, Discord, dll.) ===== -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Muhammad Fikria Ardiyansah" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:url" content="https://mfikria.vercel.app/" />
+    <meta property="og:title" content="Muhammad Fikria Ardiyansah | Portofolio Web Developer" />
+    <meta
+      property="og:description"
+      content="Kumpulan proyek, blog, dan hobi Muhammad Fikria Ardiyansah. Lihat karya dan hubungi untuk kerja sama."
+    />
+    <meta property="og:image" content="https://mfikria.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Portofolio Muhammad Fikria Ardiyansah" />
+ 
+    <!-- ===== Twitter / X ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Muhammad Fikria Ardiyansah | Portofolio Web Developer" />
+    <meta
+      name="twitter:description"
+      content="Kumpulan proyek, blog, dan hobi Muhammad Fikria Ardiyansah."
+    />
+    <meta name="twitter:image" content="https://mfikria.vercel.app/og-image.png" />
+ 
+    <!-- ===== Data terstruktur (JSON-LD) ===== -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://mfikria.vercel.app/#website",
+            "url": "https://mfikria.vercel.app/",
+            "name": "Muhammad Fikria Ardiyansah",
+            "inLanguage": "id-ID"
+          },
+          {
+            "@type": "Person",
+            "@id": "https://mfikria.vercel.app/#person",
+            "name": "Muhammad Fikria Ardiyansah",
+            "alternateName": "mfikria",
+            "url": "https://mfikria.vercel.app/",
+            "jobTitle": "Web Developer",
+            "sameAs": ["https://github.com/dodokjr"]
+          }
+        ]
+      }
+    </script>
+ 
+    <!-- Stylesheet (dimuat tanpa memblokir render halaman) -->
     <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-  />
-    <title>Muhammad Fikria Ardiyansah || Portofolio</title>
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      />
+    </noscript>
   </head>
   <body>
-    <div id="m00tyourPage" class="bg-slate-800"></div>
+    <div id="m00tyourPage" class="bg-slate-800">
+      <!-- Konten cadangan untuk crawler yang tidak menjalankan JavaScript.
+           React akan menggantinya otomatis saat aplikasi dimuat. -->
+      <noscript>
+        <h1>Muhammad Fikria Ardiyansah</h1>
+        <p>
+          Portofolio web developer: proyek, blog, dan hobi. Aktifkan JavaScript untuk
+          melihat tampilan lengkap.
+        </p>
+        <nav>
+          <a href="/app">Home</a>
+          <a href="/project">Project</a>
+          <a href="/blog">Blog</a>
+          <a href="/hobbies">My Hobbies</a>
+          <a href="/store">Store</a>
+        </nav>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      async function checkPing(url = 'https://mfikria.vercel.app/assets/Mfikria-D1fUWlBA.svg') {
-  const startTime = performance.now();
-  
-  try {
-    const response = await fetch(url, { 
-      method: 'HEAD', 
-      cache: 'no-store' 
-    });
-    
-    const endTime = performance.now();
-    const latency = Math.round(endTime - startTime);
-    
-    if (response.ok || response.type === 'opaque') {
-      console.log(`🟢 Ping berhasil! Latency: ${latency} ms`);
-      return latency;
-    } else {
-      console.warn(`🟡 Server merespons tetapi dengan error status: ${response.status}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`🔴 Ping gagal (Offline atau CORS error):`, error);
-    return false;
-  }
-}
+      // Naikkan versi ini setiap kali ingin memaksa cache lama dibuang
+const CACHE = 'mfikria-v1'
+const PRECACHE = ['/', '/manifest.webmanifest']
 
-// Contoh pemanggilan fungsi
-checkPing();
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  )
+})
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request
+  const url = new URL(req.url)
+
+  // Hanya tangani GET dari domain sendiri (API dan file musik dari domain lain dibiarkan)
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return
+  // Permintaan audio/video berbentuk range, jangan di-cache
+  if (req.headers.has('range')) return
+
+  // Navigasi halaman: ambil dari jaringan dulu, cadangan dari cache saat offline
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone()
+          caches.open(CACHE).then((cache) => cache.put('/', copy))
+          return res
+        })
+        .catch(() => caches.match('/'))
+    )
+    return
+  }
+
+  // File statis (JS, CSS, gambar): pakai cache dulu, lalu simpan hasil jaringan
+  event.respondWith(
+    caches.match(req).then(
+      (cached) =>
+        cached ||
+        fetch(req).then((res) => {
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(CACHE).then((cache) => cache.put(req, copy))
+          }
+          return res
+        })
+    )
+  )
+})
     </script>
   </body>
 </html>

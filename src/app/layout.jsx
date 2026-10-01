@@ -8,11 +8,7 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     // Mencegah scroll saat preloader aktif
-    if (load) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = load ? 'hidden' : 'unset';
 
     const timer = setTimeout(() => {
       setLoad(false);
@@ -27,11 +23,15 @@ export default function Layout({ children }) {
   return (
     <>
       <Preload load={load} />
-      
-      <div className={`min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans antialiased transition-opacity duration-500 ${load ? 'opacity-0' : 'opacity-100'}`}>
+
+      <div
+        className={`min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans antialiased transition-opacity duration-500 ${
+          load ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <Navbar />
-        
-        <main className="flex-grow">
+
+        <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 md:py-20 lg:py-24">
           {children}
         </main>
 

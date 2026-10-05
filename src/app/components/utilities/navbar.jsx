@@ -37,19 +37,28 @@ export default function Navbar() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const sidebarRef = useRef(null);
+  const menuRef = useRef(null);
+  const menuButtonRef = useRef(null);
+  const scrolledRef = useRef(false);
   const posRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef({ active: false, moved: false, startX: 0, startY: 0, originX: 0, originY: 0 });
 
   // Scroll handler
+  // FIX: sebelumnya setIsOpen(false) dipanggil di SETIAP event scroll saat masih di atas halaman.
+  // Di HP, event scroll sering muncul sendiri (address bar naik-turun, getaran sentuhan, bounce),
+  // sehingga menu langsung tertutup sesaat setelah dibuka. Sekarang state hanya berubah
+  // ketika posisi scroll benar-benar melewati ambang batas.
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > SCROLL_THRESHOLD) {
-        setIsScrolled(true);
-        setIsOpen(false);
-      } else {
-        setIsScrolled(false);
+      const scrolled = window.scrollY > SCROLL_THRESHOLD;
+      if (scrolled === scrolledRef.current) return;
+
+      scrolledRef.current = scrolled;
+      setIsScrolled(scrolled);
+      setIsOpen(false);
+
+      if (!scrolled) {
         setIsExpanded(false);
-        setIsOpen(false);
         setIsSidebarVisible(true);
       }
     };
@@ -58,6 +67,33 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Menu mobile: tutup saat klik di luar, tekan Escape, atau layar membesar ke desktop
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (menuRef.current?.contains(e.target)) return;
+      if (menuButtonRef.current?.contains(e.target)) return;
+      setIsOpen(false);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onBreakpoint = (e) => {
+      if (e.matches) setIsOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    mq.addEventListener('change', onBreakpoint);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+      mq.removeEventListener('change', onBreakpoint);
+    };
+  }, [isOpen]);
 
   const applyTransform = () => {
     if (sidebarRef.current) {
@@ -208,11 +244,13 @@ export default function Navbar() {
 
           <div className="md:hidden flex items-center">
             <button
+              ref={menuButtonRef}
               type="button"
               onClick={() => setIsOpen((v) => !v)}
               aria-label={isOpen ? 'Tutup menu' : 'Buka menu'}
               aria-expanded={isOpen}
-              className="w-9 h-9 rounded-xl bg-gray-900 border border-gray-800 text-pink-400 flex items-center justify-center"
+              aria-controls="mobile-menu"
+              className="w-9 h-9 rounded-xl bg-gray-900 border border-gray-800 text-pink-400 flex items-center justify-center touch-manipulation"
             >
               {isOpen ? <HiX className="w-4 h-4" /> : <HiMenuAlt2 className="w-4 h-4" />}
             </button>
@@ -222,7 +260,11 @@ export default function Navbar() {
 
       {/* Mobile dropdown */}
       {isOpen && !isScrolled && (
-        <div className="md:hidden fixed top-24 left-4 right-4 z-30">
+        <div
+          ref={menuRef}
+          id="mobile-menu"
+          className="md:hidden fixed top-24 left-4 right-4 z-40"
+        >
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-800 p-2.5 rounded-2xl shadow-2xl space-y-1">
             {nav.menubar.map((item) => {
               const IconComponent = item.icon;

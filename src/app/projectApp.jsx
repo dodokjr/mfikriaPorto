@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Layout from "./layout";
-import GitHubCalendar from 'react-github-calendar';
+import { GitHubCalendar } from 'react-github-calendar';
 import CardRepos from './components/project/cardRepos';
 
 export default function ProjectApp() {

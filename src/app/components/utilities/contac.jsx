@@ -4,14 +4,13 @@ import { FaLocationDot, FaPhone, FaXTwitter, FaLinkedinIn, FaFacebookF, FaInstag
 import { IoMail } from 'react-icons/io5';
 import {
   HiCheckCircle,
-  HiXCircle,
   HiExclamationCircle,
   HiArrowRight,
   HiUser,
   HiMail,
   HiChatAlt2,
-  HiX,
 } from 'react-icons/hi';
+import Alert from './Alert';
 
 const TOAST_MS = 5000;
 const MESSAGE_MAX = 500;
@@ -107,12 +106,11 @@ const inputClass = (hasError) =>
 export default function Contact({ api }) {
   const formRef = useRef(null);
   const sectionRef = useRef(null);
-  const toastTimer = useRef(null);
 
   const [fields, setFields] = useState({ name: '', email: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false); // tombol berubah hijau sebentar setelah berhasil
-  const [toast, setToast] = useState(null); // { id, type: 'success' | 'error', message } | null
+  const [toast, setToast] = useState(null); // { id, type: 'success' | 'error', title, message } | null
   const [errors, setErrors] = useState({}); // { name?: string, email?: string, message?: string }
   const [inView, setInView] = useState(false);
 
@@ -137,18 +135,10 @@ export default function Contact({ api }) {
     return () => io.disconnect();
   }, []);
 
-  // Bersihkan timer saat komponen dilepas
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
-  const dismissToast = () => {
-    clearTimeout(toastTimer.current);
-    setToast(null);
-  };
-
-  const showToast = (type, message) => {
-    clearTimeout(toastTimer.current);
-    setToast({ id: Date.now(), type, message });
-    toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
+  // Alert baru selalu memakai id baru -> komponen Alert dibuat ulang
+  // sehingga hitung mundurnya mulai dari awal.
+  const showToast = (type, title, message) => {
+    setToast({ id: Date.now(), type, title, message });
   };
 
   const handleChange = (e) => {
@@ -172,25 +162,29 @@ export default function Contact({ api }) {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      showToast('error', 'Mohon periksa kembali kolom yang ditandai sebelum mengirim pesan.');
+      showToast(
+        'error',
+        'Data belum lengkap',
+        'Mohon periksa kembali kolom yang ditandai sebelum mengirim pesan.'
+      );
       return;
     }
 
     setLoading(true);
-    dismissToast();
+    setToast(null);
 
     emailjs
       .sendForm('service_ru3f035', 'template_aggqz48', formRef.current, 'tVJhXv51XVHIQind4')
       .then(
         () => {
-          showToast('success', 'Pesan Anda berhasil dikirim! Terima kasih telah menghubungi.');
+          showToast('success', 'Pesan terkirim', 'Pesan Anda berhasil dikirim! Terima kasih telah menghubungi.');
           setFields({ name: '', email: '', message: '' });
           setErrors({});
           setSent(true);
           setTimeout(() => setSent(false), 3000);
         },
         () => {
-          showToast('error', 'Gagal mengirim pesan. Silakan coba beberapa saat lagi.');
+          showToast('error', 'Gagal mengirim', 'Gagal mengirim pesan. Silakan coba beberapa saat lagi.');
         }
       )
       .finally(() => setLoading(false));
@@ -202,242 +196,211 @@ export default function Contact({ api }) {
   });
 
   return (
-    <>
-      <style>{`
-        @keyframes ct-toast-in {
-          from { opacity: 0; transform: translateY(-12px) scale(.97); }
-          to { opacity: 1; transform: none; }
-        }
-        @keyframes ct-toast-bar {
-          from { transform: scaleX(1); }
-          to { transform: scaleX(0); }
-        }
-        .ct-toast { animation: ct-toast-in 280ms cubic-bezier(.2,.9,.3,1.1); }
-        .ct-toast-bar { transform-origin: left; animation: ct-toast-bar ${TOAST_MS}ms linear forwards; }
-        @media (prefers-reduced-motion: reduce) {
-          .ct-toast, .ct-toast-bar { animation: none; }
-        }
-      `}</style>
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-gray-950 py-20 transition-colors duration-300"
+    >
+      {/* Cahaya latar */}
+      <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-16 h-80 w-80 rounded-full bg-pink-600/15 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-indigo-600/15 blur-3xl" />
 
-      <section
-        ref={sectionRef}
-        className="relative overflow-hidden bg-gray-950 py-20 transition-colors duration-300"
-      >
-        {/* Cahaya latar */}
-        <div aria-hidden="true" className="pointer-events-none absolute -left-32 top-16 h-80 w-80 rounded-full bg-pink-600/15 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-indigo-600/15 blur-3xl" />
-
-        {/* Toast */}
-        {toast && (
-          <div
+      {/* Alert: hitung mundur melingkar + tombol close */}
+      {toast && (
+        <div className="fixed right-4 top-4 z-50 w-[calc(100%-2rem)] max-w-sm sm:right-6 sm:top-6">
+          <Alert
             key={toast.id}
-            role={toast.type === 'error' ? 'alert' : 'status'}
-            className="ct-toast fixed right-4 top-4 z-50 w-[calc(100%-2rem)] max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-gray-900/95 shadow-2xl backdrop-blur-md sm:right-6 sm:top-6"
+            variant={toast.type}
+            title={toast.title}
+            duration={TOAST_MS}
+            onClose={() => setToast(null)}
+            className="shadow-2xl"
           >
-            <div className="flex items-start gap-3 px-4 py-4">
-              {toast.type === 'success' ? (
-                <HiCheckCircle className="h-6 w-6 shrink-0 text-emerald-400" />
-              ) : (
-                <HiXCircle className="h-6 w-6 shrink-0 text-pink-500" />
-              )}
-              <p className="flex-1 text-xs font-semibold leading-relaxed text-white">{toast.message}</p>
-              <button
-                type="button"
-                onClick={dismissToast}
-                aria-label="Tutup notifikasi"
-                className="rounded-full p-1 text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <HiX className="h-4 w-4" />
-              </button>
-            </div>
-            <div
-              className={`ct-toast-bar h-0.5 w-full ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-pink-500'}`}
-            />
-          </div>
-        )}
+            {toast.message}
+          </Alert>
+        </div>
+      )}
 
-        <div className="container relative mx-auto max-w-6xl px-4">
-          {/* Header */}
-          <div style={reveal(0).style} className={`mx-auto mb-14 max-w-xl text-center ${reveal(0).className}`}>
-            <span className="rounded-full border border-pink-500/20 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-pink-500">
-              Get In Touch
-            </span>
-            <h2 className="mt-3 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-4xl">
-              Contact Me
-            </h2>
-            <p className="mt-2 text-xs text-gray-400 sm:text-sm">
-              Punya pertanyaan, tawaran proyek, atau sekadar ingin menyapa? Kirim pesan Anda di sini.
-            </p>
-          </div>
+      <div className="container relative mx-auto max-w-6xl px-4">
+        {/* Header */}
+        <div style={reveal(0).style} className={`mx-auto mb-14 max-w-xl text-center ${reveal(0).className}`}>
+          <span className="rounded-full border border-pink-500/20 bg-pink-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-pink-500">
+            Get In Touch
+          </span>
+          <h2 className="mt-3 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-4xl">
+            Contact Me
+          </h2>
+          <p className="mt-2 text-xs text-gray-400 sm:text-sm">
+            Punya pertanyaan, tawaran proyek, atau sekadar ingin menyapa? Kirim pesan Anda di sini.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 lg:items-stretch">
-            {/* Info Kontak & Sosial Media */}
-            <div style={reveal(120).style} className={`lg:col-span-2 ${reveal(120).className}`}>
-              <GlassCard className="flex h-full flex-col p-7 sm:p-8">
-                <div className="flex h-full flex-col justify-between">
-                  <div>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-400">
-                      <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                      </span>
-                      Terbuka untuk proyek baru
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 lg:items-stretch">
+          {/* Info Kontak & Sosial Media */}
+          <div style={reveal(120).style} className={`lg:col-span-2 ${reveal(120).className}`}>
+            <GlassCard className="flex h-full flex-col p-7 sm:p-8">
+              <div className="flex h-full flex-col justify-between">
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-400">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                     </span>
+                    Terbuka untuk proyek baru
+                  </span>
 
-                    <h3 className="mt-5 text-xl font-bold tracking-tight text-white">Contact Information</h3>
-                    <p className="mt-2 text-xs leading-relaxed text-gray-400">
-                      Silakan hubungi melalui detail kontak berikut atau jaringan media sosial saya.
-                    </p>
+                  <h3 className="mt-5 text-xl font-bold tracking-tight text-white">Contact Information</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-gray-400">
+                    Silakan hubungi melalui detail kontak berikut atau jaringan media sosial saya.
+                  </p>
 
-                    <ul className="mt-7 space-y-2">
-                      {CONTACTS.map(({ icon: Icon, label, value, href, external }) => (
-                        <li key={label}>
-                          <a
-                            href={href}
-                            {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-                            className="group/item flex items-center gap-4 rounded-2xl p-2.5 transition-colors hover:bg-white/[0.04]"
-                          >
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-pink-500/20 bg-pink-500/10 text-pink-400 transition-all duration-300 group-hover/item:scale-110 group-hover/item:bg-pink-500 group-hover/item:text-white">
-                              <Icon size={16} />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                                {label}
-                              </span>
-                              <span className="mt-0.5 block break-words text-xs font-medium leading-relaxed text-gray-300 transition-colors group-hover/item:text-white">
-                                {value}
-                              </span>
-                            </span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Media Sosial */}
-                  <div className="mt-10 border-t border-white/10 pt-6">
-                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Follow Me</p>
-                    <div className="flex gap-3">
-                      {SOCIALS.map(({ icon: Icon, label, href }) => (
+                  <ul className="mt-7 space-y-2">
+                    {CONTACTS.map(({ icon: Icon, label, value, href, external }) => (
+                      <li key={label}>
                         <a
-                          key={label}
                           href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={label}
-                          className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-gray-300 transition-all duration-300 hover:-translate-y-1 hover:border-pink-500/40 hover:bg-pink-500/10 hover:text-pink-400"
+                          {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+                          className="group/item flex items-center gap-4 rounded-2xl p-2.5 transition-colors hover:bg-white/[0.04]"
                         >
-                          <Icon size={16} />
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-pink-500/20 bg-pink-500/10 text-pink-400 transition-all duration-300 group-hover/item:scale-110 group-hover/item:bg-pink-500 group-hover/item:text-white">
+                            <Icon size={16} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                              {label}
+                            </span>
+                            <span className="mt-0.5 block break-words text-xs font-medium leading-relaxed text-gray-300 transition-colors group-hover/item:text-white">
+                              {value}
+                            </span>
+                          </span>
                         </a>
-                      ))}
-                    </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Media Sosial */}
+                <div className="mt-10 border-t border-white/10 pt-6">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400">Follow Me</p>
+                  <div className="flex gap-3">
+                    {SOCIALS.map(({ icon: Icon, label, href }) => (
+                      <a
+                        key={label}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={label}
+                        className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-gray-300 transition-all duration-300 hover:-translate-y-1 hover:border-pink-500/40 hover:bg-pink-500/10 hover:text-pink-400"
+                      >
+                        <Icon size={16} />
+                      </a>
+                    ))}
                   </div>
                 </div>
-              </GlassCard>
-            </div>
+              </div>
+            </GlassCard>
+          </div>
 
-            {/* Form Kontak */}
-            <div style={reveal(240).style} className={`lg:col-span-3 ${reveal(240).className}`}>
-              <GlassCard className="h-full p-7 sm:p-8">
-                <h3 className="text-xl font-bold tracking-tight text-white">Send a Message</h3>
-                <p className="mb-6 mt-1 text-xs text-gray-400">Biasanya saya membalas dalam 1–2 hari kerja.</p>
+          {/* Form Kontak */}
+          <div style={reveal(240).style} className={`lg:col-span-3 ${reveal(240).className}`}>
+            <GlassCard className="h-full p-7 sm:p-8">
+              <h3 className="text-xl font-bold tracking-tight text-white">Send a Message</h3>
+              <p className="mb-6 mt-1 text-xs text-gray-400">Biasanya saya membalas dalam 1–2 hari kerja.</p>
 
-                <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-5">
-                  <Field id="contact-name" label="Full Name" icon={HiUser} error={errors.name}>
-                    <input
-                      id="contact-name"
-                      type="text"
-                      name="name"
-                      autoComplete="name"
-                      value={fields.name}
-                      onChange={handleChange}
-                      placeholder="John Doe"
-                      aria-invalid={!!errors.name}
-                      aria-describedby={errors.name ? 'contact-name-error' : undefined}
-                      className={inputClass(!!errors.name)}
-                    />
-                  </Field>
+              <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-5">
+                <Field id="contact-name" label="Full Name" icon={HiUser} error={errors.name}>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    value={fields.name}
+                    onChange={handleChange}
+                    placeholder="John Doe"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? 'contact-name-error' : undefined}
+                    className={inputClass(!!errors.name)}
+                  />
+                </Field>
 
-                  <Field id="contact-email" label="Email Address" icon={HiMail} error={errors.email}>
-                    <input
-                      id="contact-email"
-                      type="email"
-                      name="email"
-                      autoComplete="email"
-                      value={fields.email}
-                      onChange={handleChange}
-                      placeholder="johndoe@example.com"
-                      aria-invalid={!!errors.email}
-                      aria-describedby={errors.email ? 'contact-email-error' : undefined}
-                      className={inputClass(!!errors.email)}
-                    />
-                  </Field>
+                <Field id="contact-email" label="Email Address" icon={HiMail} error={errors.email}>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    value={fields.email}
+                    onChange={handleChange}
+                    placeholder="johndoe@example.com"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? 'contact-email-error' : undefined}
+                    className={inputClass(!!errors.email)}
+                  />
+                </Field>
 
-                  <Field
-                    id="contact-message"
-                    label="Message"
-                    icon={HiChatAlt2}
-                    error={errors.message}
-                    extra={
-                      <span
-                        className={`text-[10px] font-semibold tabular-nums ${
-                          fields.message.length > MESSAGE_MAX - 50 ? 'text-pink-400' : 'text-gray-500'
-                        }`}
-                      >
-                        {fields.message.length}/{MESSAGE_MAX}
-                      </span>
-                    }
-                  >
-                    <textarea
-                      id="contact-message"
-                      name="message"
-                      rows={5}
-                      value={fields.message}
-                      onChange={handleChange}
-                      placeholder="Tuliskan pesan atau detail proyek Anda di sini..."
-                      aria-invalid={!!errors.message}
-                      aria-describedby={errors.message ? 'contact-message-error' : undefined}
-                      className={`${inputClass(!!errors.message)} resize-none`}
-                    />
-                  </Field>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`group/btn relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all duration-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${
-                      sent
-                        ? 'bg-emerald-600 shadow-emerald-600/25'
-                        : 'bg-gradient-to-r from-pink-600 to-fuchsia-600 shadow-pink-600/25 hover:shadow-pink-500/40'
-                    }`}
-                  >
-                    {/* Kilau yang melintas saat hover */}
+                <Field
+                  id="contact-message"
+                  label="Message"
+                  icon={HiChatAlt2}
+                  error={errors.message}
+                  extra={
                     <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-white/20 opacity-0 transition-all duration-700 group-hover/btn:left-full group-hover/btn:opacity-100"
-                    />
-                    {loading ? (
-                      <>
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        <span>Sending Message...</span>
-                      </>
-                    ) : sent ? (
-                      <>
-                        <HiCheckCircle className="h-4 w-4" />
-                        <span>Message Sent</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Send Message</span>
-                        <HiArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </GlassCard>
-            </div>
+                      className={`text-[10px] font-semibold tabular-nums ${
+                        fields.message.length > MESSAGE_MAX - 50 ? 'text-pink-400' : 'text-gray-500'
+                      }`}
+                    >
+                      {fields.message.length}/{MESSAGE_MAX}
+                    </span>
+                  }
+                >
+                  <textarea
+                    id="contact-message"
+                    name="message"
+                    rows={5}
+                    value={fields.message}
+                    onChange={handleChange}
+                    placeholder="Tuliskan pesan atau detail proyek Anda di sini..."
+                    aria-invalid={!!errors.message}
+                    aria-describedby={errors.message ? 'contact-message-error' : undefined}
+                    className={`${inputClass(!!errors.message)} resize-none`}
+                  />
+                </Field>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`group/btn relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl py-3.5 text-center text-xs font-bold text-white shadow-lg transition-all duration-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${
+                    sent
+                      ? 'bg-emerald-600 shadow-emerald-600/25'
+                      : 'bg-gradient-to-r from-pink-600 to-fuchsia-600 shadow-pink-600/25 hover:shadow-pink-500/40'
+                  }`}
+                >
+                  {/* Kilau yang melintas saat hover */}
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-white/20 opacity-0 transition-all duration-700 group-hover/btn:left-full group-hover/btn:opacity-100"
+                  />
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : sent ? (
+                    <>
+                      <HiCheckCircle className="h-4 w-4" />
+                      <span>Message Sent</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Message</span>
+                      <HiArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </GlassCard>
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

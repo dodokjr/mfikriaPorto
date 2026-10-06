@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
- 
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
     <!-- ===== SEO dasar ===== -->
     <title>Muhammad Fikria Ardiyansah | Portofolio Web Developer</title>
     <meta
@@ -18,15 +19,15 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <link rel="canonical" href="https://mfikria.vercel.app/" />
     <meta name="theme-color" content="#1e293b" />
- 
+
     <!-- Ikon dan PWA (install app) -->
     <link rel="icon" type="image/png" href="./src/assets/faicons.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./src/assets/faicons.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="mfikria" />
- 
+
     <!-- ===== Open Graph (Facebook, WhatsApp, LinkedIn, Discord, dll.) ===== -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Muhammad Fikria Ardiyansah" />
@@ -37,11 +38,11 @@
       property="og:description"
       content="Kumpulan proyek, blog, dan hobi Muhammad Fikria Ardiyansah. Lihat karya dan hubungi untuk kerja sama."
     />
-    <meta property="og:image" content="https://mfikria.vercel.app/og-image.png" />
+    <meta property="og:image" content="https://mfikria.vercel.app/assets/faicons-2bfNeoU2.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Portofolio Muhammad Fikria Ardiyansah" />
- 
+
     <!-- ===== Twitter / X ===== -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Muhammad Fikria Ardiyansah | Portofolio Web Developer" />
@@ -49,8 +50,8 @@
       name="twitter:description"
       content="Kumpulan proyek, blog, dan hobi Muhammad Fikria Ardiyansah."
     />
-    <meta name="twitter:image" content="https://mfikria.vercel.app/og-image.png" />
- 
+    <meta name="twitter:image" content="https://mfikria.vercel.app/assets/faicons-2bfNeoU2.png" />
+
     <!-- ===== Data terstruktur (JSON-LD) ===== -->
     <script type="application/ld+json">
       {
@@ -75,25 +76,16 @@
         ]
       }
     </script>
- 
-    <!-- Stylesheet (dimuat tanpa memblokir render halaman) -->
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-      media="print"
-      onload="this.media='all'"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-      />
-    </noscript>
   </head>
   <body>
     <div id="m00tyourPage" class="bg-slate-800">
-      <!-- Konten cadangan untuk crawler yang tidak menjalankan JavaScript.
-           React akan menggantinya otomatis saat aplikasi dimuat. -->
       <noscript>
         <h1>Muhammad Fikria Ardiyansah</h1>
         <p>
@@ -110,67 +102,6 @@
       </noscript>
     </div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Naikkan versi ini setiap kali ingin memaksa cache lama dibuang
-const CACHE = 'mfikria-v1'
-const PRECACHE = ['/', '/manifest.webmanifest']
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
-  )
-})
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  )
-})
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request
-  const url = new URL(req.url)
-
-  // Hanya tangani GET dari domain sendiri (API dan file musik dari domain lain dibiarkan)
-  if (req.method !== 'GET' || url.origin !== self.location.origin) return
-  // Permintaan audio/video berbentuk range, jangan di-cache
-  if (req.headers.has('range')) return
-
-  // Navigasi halaman: ambil dari jaringan dulu, cadangan dari cache saat offline
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((cache) => cache.put('/', copy))
-          return res
-        })
-        .catch(() => caches.match('/'))
-    )
-    return
-  }
-
-  // File statis (JS, CSS, gambar): pakai cache dulu, lalu simpan hasil jaringan
-  event.respondWith(
-    caches.match(req).then(
-      (cached) =>
-        cached ||
-        fetch(req).then((res) => {
-          if (res.ok) {
-            const copy = res.clone()
-            caches.open(CACHE).then((cache) => cache.put(req, copy))
-          }
-          return res
-        })
-    )
-  )
-})
-    </script>
+    <script src="/register-sw.js" defer></script>
   </body>
 </html>

@@ -1,0 +1,61 @@
+{
+  "id": "/app",
+  "name": "Muhammad Fikria Ardiyansah",
+  "short_name": "mfikria",
+  "description": "Portofolio Muhammad Fikria Ardiyansah: kumpulan proyek, blog, dan hobi.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/app",
+  "scope": "/app",
+  "display": "standalone",
+  "background_color": "#1e293b",
+  "theme_color": "#1e293b",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Project",
+      "short_name": "Project",
+      "url": "/project"
+    },
+    {
+      "name": "Blog",
+      "short_name": "Blog",
+      "url": "/blog"
+    },
+    {
+      "name": "My Hobbies",
+      "short_name": "Hobbies",
+      "url": "/hobbies"
+    },
+    {
+      "name": "Store",
+      "short_name": "Store",
+      "url": "/store"
+    }
+  ]
+}

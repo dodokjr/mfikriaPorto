@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { HiHome, HiFolder, HiUsers, HiShoppingBag, HiChartBar, HiNewspaper, HiServer, HiLogout, HiMenuAlt2, HiX, HiTrendingUp, HiCurrencyDollar, HiPlus, HiTrash, HiPencil, HiStar } from 'react-icons/hi';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  HiHome, HiFolder, HiUsers, HiShoppingBag, HiChartBar, HiNewspaper, HiServer,
+  HiLogout, HiMenuAlt2, HiX, HiTrendingUp, HiCurrencyDollar, HiPlus, HiTrash,
+  HiPencil, HiStar, HiPhotograph,
+} from 'react-icons/hi';
+
+const API_BASE = 'https://api-mfikria.vercel.app/mfikria/v1';
+const LOGIN_PAGE = '/auth/ff'; // sesuaikan dengan halaman login kamu
 
 const menuItems = [
   { name: "Dashboard", icon: HiHome, id: "dashboard", href: "#dashboard" },
@@ -7,6 +14,7 @@ const menuItems = [
   { name: "Blog", icon: HiNewspaper, id: "blog", href: "#blog" },
   { name: "Users", icon: HiUsers, id: "users", href: "#users" },
   { name: "Store", icon: HiShoppingBag, id: "store", href: "#store" },
+  { name: "Photos", icon: HiPhotograph, id: "photos", href: "#photos" },
   { name: "Server", icon: HiServer, id: "server", href: "#server" },
   { name: "Analytics", icon: HiChartBar, id: "analytics", href: "#analytics" },
 ];
@@ -17,11 +25,115 @@ const stats = [
   { title: "Proyek Aktif", value: "34", change: "+4.1%", icon: HiFolder },
 ];
 
+const EMPTY_FORM = { title: '', category: '', email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' };
+
+/* ------------------------- SESSION & FOTO HELPER ------------------------- */
+
+// Sesi disimpan oleh halaman login: localStorage 'session' = dashboardData dari /login
+function readSession() {
+  try {
+    const raw = localStorage.getItem('session');
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Foto profil: {API_BASE}/assets/photo/{photoId}?q={token}
+// photoId & token = googleDrivePhoto dari respons /login. Backend mendekripsi token dan
+// mencocokkannya dengan photoId; tidak valid -> 404, lalu avatar memakai inisial.
+function buildProfilePhotoUrl(photoId, token) {
+  if (!photoId || !token) return null;
+  return `${API_BASE}/assets/photo/${encodeURIComponent(photoId)}?q=${encodeURIComponent(token)}`;
+}
+
+function buildPhotoUrl(photoId, encryptedQueryToken) {
+  return `${API_BASE}/assets/photo/${photoId}?query=${encodeURIComponent(encryptedQueryToken || '')}`;
+}
+
 export default function Dashboard() {
+  const [session] = useState(readSession);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
+
+  // Logout
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+
+  // Foto dari Google Drive (/photos)
+  const [photos, setPhotos] = useState([]);
+  const [photosLoading, setPhotosLoading] = useState(false);
+  const [photosError, setPhotosError] = useState('');
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  const username = session?.profile?.username || 'Admin';
+  const accessToken = session?.sessionTokens?.accessToken || '';
+  const encryptedQueryToken = session?.sessionTokens?.encryptedQueryToken || '';
+  const avatarUrl = buildProfilePhotoUrl(session?.googleDrivePhoto?.photoId, session?.googleDrivePhoto?.token);
+
+  // Tanpa sesi -> kembali ke halaman login
+  useEffect(() => {
+    if (!session) window.location.replace(LOGIN_PAGE);
+  }, [session]);
+
+  /* ----------------------------- GET /photos ----------------------------- */
+  const loadPhotos = useCallback(async () => {
+    setPhotosLoading(true);
+    setPhotosError('');
+    try {
+      const res = await fetch(`${API_BASE}/photos`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.status !== 'success') {
+        setPhotosError(String(data.message || 'Gagal memuat foto.').replace(/^\d{3} [A-Za-z ]+: /, ''));
+        return;
+      }
+      setPhotos(data.data || []);
+    } catch (err) {
+      setPhotosError('Tidak dapat terhubung ke server.');
+    } finally {
+      setPhotosLoading(false);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (activeMenu === 'photos' && session) loadPhotos();
+  }, [activeMenu, session, loadPhotos]);
+
+  /* ----------------------------- POST /logout ---------------------------- */
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    setLogoutError('');
+
+    try {
+      const res = await fetch(`${API_BASE}/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ username, encryptedQueryToken }),
+      });
+
+      // 403 = sesi sudah tidak valid di server, jadi aman dibersihkan di sisi client
+      if (res.ok || res.status === 403) {
+        try { localStorage.removeItem('session'); } catch (e) { /* abaikan */ }
+        window.location.assign(LOGIN_PAGE);
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      setLogoutError(String(data.message || 'Logout gagal. Coba lagi.').replace(/^\d{3} [A-Za-z ]+: /, ''));
+    } catch (err) {
+      // Jangan hapus sesi: status di server masih "online" sehingga login berikutnya akan ditolak
+      setLogoutError('Tidak dapat terhubung ke server. Coba lagi.');
+    }
+    setIsLoggingOut(false);
+  };
 
   // States untuk data dinamis
   const [projects, setProjects] = useState([
@@ -52,26 +164,26 @@ export default function Dashboard() {
   ]);
 
   // Form input states
-  const [formData, setFormData] = useState({ title: '', category: '', email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   const handleOpenAddModal = () => {
     setEditId(null);
-    setFormData({ title: '', category: '', email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+    setFormData(EMPTY_FORM);
     setShowModal(true);
   };
 
   const handleOpenEditModal = (item) => {
     setEditId(item.id);
     if (activeMenu === 'projects') {
-      setFormData({ title: item.name, category: item.category, email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+      setFormData({ ...EMPTY_FORM, title: item.name, category: item.category });
     } else if (activeMenu === 'blog') {
-      setFormData({ title: item.title, category: '', email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+      setFormData({ ...EMPTY_FORM, title: item.title });
     } else if (activeMenu === 'users') {
-      setFormData({ title: item.name, category: '', email: item.email, price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+      setFormData({ ...EMPTY_FORM, title: item.name, email: item.email });
     } else if (activeMenu === 'store') {
-      setFormData({ title: item.name, category: '', email: '', price: item.price, stock: item.stock, rating: item.rating, image: item.image, ip: '', cpu: '', ram: '' });
+      setFormData({ ...EMPTY_FORM, title: item.name, price: item.price, stock: item.stock, rating: item.rating, image: item.image });
     } else if (activeMenu === 'server') {
-      setFormData({ title: item.name, category: '', email: '', price: '', stock: '', rating: '', image: '', ip: item.ip, cpu: item.cpu, ram: item.ram });
+      setFormData({ ...EMPTY_FORM, title: item.name, ip: item.ip, cpu: item.cpu, ram: item.ram });
     }
     setShowModal(true);
   };
@@ -109,13 +221,13 @@ export default function Dashboard() {
       } else if (activeMenu === 'users') {
         setUsersList([{ id: Date.now(), name: formData.title, email: formData.email || 'user@example.com', role: 'Member' }, ...usersList]);
       } else if (activeMenu === 'store') {
-        setStoreItems([{ 
-          id: Date.now(), 
-          name: formData.title, 
-          price: formData.price || 'Rp 100.000', 
-          stock: formData.stock || 10, 
-          rating: formData.rating || 5.0, 
-          image: formData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60' 
+        setStoreItems([{
+          id: Date.now(),
+          name: formData.title,
+          price: formData.price || 'Rp 100.000',
+          stock: formData.stock || 10,
+          rating: formData.rating || 5.0,
+          image: formData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60'
         }, ...storeItems]);
       } else if (activeMenu === 'server') {
         setServers([{
@@ -129,7 +241,7 @@ export default function Dashboard() {
     }
 
     setShowModal(false);
-    setFormData({ title: '', category: '', email: '', price: '', stock: '', rating: '', image: '', ip: '', cpu: '', ram: '' });
+    setFormData(EMPTY_FORM);
   };
 
   // Helper function untuk menghitung status server secara terpusat
@@ -152,9 +264,29 @@ export default function Dashboard() {
     }
   };
 
+  // Avatar: foto dari Drive (via /assets/photo/{photoId}?q={token}) atau inisial jika gagal dimuat
+  const Avatar = ({ size = 'w-9 h-9' }) => (
+    <div className={`${size} rounded-xl bg-gradient-to-tr from-pink-600 to-purple-600 flex items-center justify-center text-xs font-bold shadow-lg shadow-pink-600/20 overflow-hidden shrink-0`}>
+      {avatarUrl && !avatarFailed ? (
+        <img
+          src={avatarUrl}
+          alt={username}
+          onError={() => setAvatarFailed(true)}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <span>{username.charAt(0).toUpperCase()}</span>
+      )}
+    </div>
+  );
+
+  if (!session) return null;
+
+  const canAdd = !['dashboard', 'analytics', 'photos'].includes(activeMenu);
+
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
-      
+
       {/* Sidebar Desktop & Mobile */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-800 p-6 flex flex-col justify-between transition-transform duration-300 md:translate-x-0 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -183,8 +315,8 @@ export default function Dashboard() {
                     setIsSidebarOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group cursor-pointer no-underline ${
-                    isActive 
-                      ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/20' 
+                    isActive
+                      ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/20'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800/60'
                   }`}
                 >
@@ -196,19 +328,35 @@ export default function Dashboard() {
           </nav>
         </div>
 
-        <button className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all cursor-pointer">
-          <HiLogout className="w-4 h-4" />
-          <span>Keluar</span>
-        </button>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 px-3.5">
+            <Avatar size="w-8 h-8" />
+            <span className="text-xs font-semibold text-gray-300 truncate">{username}</span>
+          </div>
+
+          {logoutError && (
+            <p role="alert" className="px-3.5 text-[10px] leading-relaxed text-red-400">{logoutError}</p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <HiLogout className="w-4 h-4" />
+            <span>{isLoggingOut ? 'Keluar...' : 'Keluar'}</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64 p-6 md:p-10 space-y-8">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setIsSidebarOpen(true)}
               className="md:hidden w-9 h-9 rounded-xl bg-gray-900 border border-gray-800 text-pink-400 flex items-center justify-center cursor-pointer"
             >
@@ -220,7 +368,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {activeMenu !== 'dashboard' && activeMenu !== 'analytics' && (
+          {canAdd && (
             <button
               onClick={handleOpenAddModal}
               className="flex items-center gap-2 bg-pink-600 hover:bg-pink-500 active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-pink-600/20 transition-all cursor-pointer"
@@ -230,11 +378,7 @@ export default function Dashboard() {
             </button>
           )}
 
-          {activeMenu === 'dashboard' && (
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-600 to-purple-600 flex items-center justify-center text-xs font-bold shadow-lg shadow-pink-600/20">
-              A
-            </div>
-          )}
+          {activeMenu === 'dashboard' && <Avatar />}
         </div>
 
         {/* Dynamic Content Views */}
@@ -352,6 +496,52 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Galeri foto dari Google Drive: GET /photos + GET /assets/photo/:photoId */}
+        {activeMenu === 'photos' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                {photosLoading ? 'Memuat foto...' : `${photos.length} foto di folder Google Drive`}
+              </p>
+              <button
+                type="button"
+                onClick={loadPhotos}
+                disabled={photosLoading}
+                className="text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Muat ulang
+              </button>
+            </div>
+
+            {photosError && (
+              <div role="alert" className="p-4 bg-red-950/60 border border-red-800/80 rounded-2xl text-xs text-red-200">
+                {photosError}
+              </div>
+            )}
+
+            {!photosLoading && !photosError && photos.length === 0 && (
+              <div className="p-12 text-center bg-gray-900/60 border border-gray-800 rounded-2xl text-xs text-gray-400">
+                Belum ada foto. Tambahkan gambar langsung ke folder Google Drive.
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {photos.map((photo) => (
+                <div key={photo.photoId} className="p-3 bg-gray-900/60 border border-gray-800 rounded-2xl space-y-2">
+                  <img
+                    src={buildPhotoUrl(photo.photoId, encryptedQueryToken)}
+                    alt={photo.name}
+                    loading="lazy"
+                    className="w-full h-32 object-cover rounded-xl border border-gray-800 bg-gray-950"
+                  />
+                  <p className="text-[10px] font-semibold text-gray-300 truncate" title={photo.name}>{photo.name}</p>
+                  <p className="text-[10px] font-mono text-gray-500 truncate" title={photo.photoId}>{photo.photoId}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -576,9 +766,7 @@ export default function Dashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold uppercase tracking- dan RAM (%)</label">
-                        Ram(%)
-                        </label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">RAM (%)</label>
                       <input
                         type="number"
                         value={formData.ram}

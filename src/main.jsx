@@ -19,6 +19,8 @@ import CvPdf from "./assets/documents/cv.pdf"
 import Store from './app/Store.jsx'
 import LoginForm from'./app/components/admin/LoginForm.jsx'
 import Dashboard from'./app/components/admin/Dashboard.jsx'
+import VideoLibrary from"./app/components/video/VideoLibrary.jsx"
+import VideoWatch from "./app/components/video/VideoWatch.jsx"
 
 const router = createBrowserRouter([
   { path: "/app", element: <App /> },
@@ -30,6 +32,8 @@ const router = createBrowserRouter([
   { path: "/hobbies", element: <MyHobbies /> },
   { path: "/me", element: <Link /> },
   { path: "/store", element: <Store /> },
+  { path: "/video", element: <VideoLibrary /> },
+  { path: "/video/watch", element: <VideoWatch /> }, // /video/watch?id={videoToken}
   { path: "/auth/ff/", element: <LoginForm /> },
   { path: "/auth/ff/Dashboard", element: <Dashboard /> },
   { path: "*", element: <NotFound /> }

@@ -11,6 +11,7 @@ import SectionStar from './components/home/SectionStar';
 import Benner from './components/utilities/Benner.jsx';
 import { IoReload } from 'react-icons/io5';
 import { HiSparkles, HiX } from 'react-icons/hi';
+import { ensureGuestToken } from './components/utilities/guestToken.js'; // sesuaikan path dengan lokasi file guestToken.js
 
 function App() {
   const [data, setData] = useState(null);
@@ -19,6 +20,13 @@ function App() {
 
   useEffect(() => {
     let isMounted = true;
+
+    // Dapatkan guest token saat user masuk website (tanpa login, dicatat di Google Sheet).
+    // Tidak memblokir tampilan halaman: kalau gagal, website tetap jalan.
+    ensureGuestToken().catch((error) => {
+      console.error('Guest token gagal diambil:', error);
+    });
+
     fetch("https://api-mfikria.vercel.app/v1/home")
       .then((res) => res.json())
       .then((body) => {

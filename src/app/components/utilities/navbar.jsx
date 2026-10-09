@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HiHome, HiFolder, HiNewspaper, HiHeart, HiShoppingBag } from 'react-icons/hi';
+import { HiHome, HiFolder, HiNewspaper, HiHeart, HiVideoCamera, HiShoppingBag } from 'react-icons/hi';
 import { FaGithub } from 'react-icons/fa';
 
 const nav = {
@@ -9,6 +9,7 @@ const nav = {
     { name: "Project", url: "/project", icon: HiFolder },
     { name: "Blog", url: "/blog", icon: HiNewspaper },
     { name: "My Hobbies", url: "/hobbies", icon: HiHeart },
+    { name: "Video", url: "/video", icon: HiVideoCamera },
     { name: "Store", url: "/store", icon: HiShoppingBag }
   ],
   github_button: {

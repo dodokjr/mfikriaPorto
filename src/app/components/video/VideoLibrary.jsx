@@ -7,6 +7,23 @@ import { fetchVideoLibrary } from '../utilities/guestToken';
 import { Thumb, VideoToolbar, formatSize, watchPath } from './videoUi';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
+// Tanggal upload video, contoh: "9 Okt 2026" (zona waktu WIB).
+// Memakai uploadedAt (ISO dari Drive); kalau tidak ada, pakai uploadedAtLocal.tanggal dari backend.
+function formatUploadDate(video) {
+  if (video.uploadedAt) {
+    const d = new Date(video.uploadedAt);
+    if (!Number.isNaN(d.getTime())) {
+      return new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(d);
+    }
+  }
+  return video.uploadedAtLocal?.tanggal || null;
+}
+
 export default function VideoLibrary() {
   const [params] = useSearchParams();
   const [search, setSearch] = useState(params.get('q') || '');
@@ -81,24 +98,40 @@ export default function VideoLibrary() {
               </p>
             ) : (
               <div className="grid gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filtered.map((v) => (
-                  <Link
-                    key={v.videoToken}
-                    to={watchPath(v.videoToken)}
-                    state={{ video: { title: v.title, size: v.size, mimeType: v.mimeType } }}
-                    className="group block text-left"
-                  >
-                    <Thumb
-                      url={v.videoUrl}
-                      duration={durations[v.videoToken]}
-                      onDuration={(d) => setDuration(v.videoToken, d)}
-                    />
-                    <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-cyan-400">
-                      {v.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-gray-500">{formatSize(v.size)}</p>
-                  </Link>
-                ))}
+                {filtered.map((v) => {
+                  const uploadDate = formatUploadDate(v);
+                  return (
+                    <Link
+                      key={v.videoToken}
+                      to={watchPath(v.videoToken)}
+                      state={{
+                        video: {
+                          title: v.title,
+                          size: v.size,
+                          mimeType: v.mimeType,
+                          views: v.views,
+                          uploadedAt: v.uploadedAt,
+                          uploadedAtLocal: v.uploadedAtLocal,
+                        },
+                      }}
+                      className="group block text-left"
+                    >
+                      <Thumb
+                        url={v.videoUrl}
+                        duration={durations[v.videoToken]}
+                        onDuration={(d) => setDuration(v.videoToken, d)}
+                      />
+                      <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-cyan-400">
+                        {v.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {formatSize(v.size)}
+                        {typeof v.views === 'number' && ` • ${v.views.toLocaleString('id-ID')}x ditonton`}
+                        {uploadDate && ` • ${uploadDate}`}
+                      </p>
+                    </Link>
+                  );
+                })}
               </div>
             ))}
         </div>

@@ -12,6 +12,24 @@ import VideoPlayer from './VideoPlayer';
 import { Thumb, VideoToolbar, formatDuration, formatSize, watchPath } from './videoUi';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
+// Tanggal upload video (WIB). month: 'long' -> "9 Oktober 2026", 'short' -> "9 Okt 2026".
+// Memakai uploadedAt (ISO dari Drive); kalau tidak ada, pakai uploadedAtLocal.tanggal dari backend.
+function formatUploadDate(video, month = 'short') {
+  if (!video) return null;
+  if (video.uploadedAt) {
+    const d = new Date(video.uploadedAt);
+    if (!Number.isNaN(d.getTime())) {
+      return new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: 'numeric',
+        month,
+        year: 'numeric',
+      }).format(d);
+    }
+  }
+  return video.uploadedAtLocal?.tanggal || null;
+}
+
 export default function VideoWatch() {
   const [params] = useSearchParams();
   const id = params.get('id');
@@ -20,7 +38,7 @@ export default function VideoWatch() {
 
   const [search, setSearch] = useState('');
   const [session, setSession] = useState(null);
-  const [info, setInfo] = useState(null); // { title, size, mimeType }
+  const [info, setInfo] = useState(null); // { title, size, mimeType, views, uploadedAt, uploadedAtLocal }
   const [status, setStatus] = useState('loading'); // loading | ready | error
   const [duration, setDuration] = useState(0);
   const [playerError, setPlayerError] = useState(false);
@@ -48,7 +66,8 @@ export default function VideoWatch() {
       })
       .then((data) => {
         if (!alive) return;
-        setInfo(data);
+        // Gabungkan dengan data dari state navigasi supaya field yang tidak dikembalikan tidak hilang
+        setInfo((prev) => ({ ...(prev || {}), ...data }));
         setStatus('ready');
       })
       .catch((error) => {
@@ -78,6 +97,8 @@ export default function VideoWatch() {
     setDurations((prev) => (prev[token] === d ? prev : { ...prev, [token]: d }));
 
   const goSearch = (q) => navigate(q.trim() ? `/video?q=${encodeURIComponent(q.trim())}` : '/video');
+
+  const uploadDate = formatUploadDate(info, 'long');
 
   return (
     <Layout>
@@ -132,7 +153,14 @@ export default function VideoWatch() {
                   <>
                     <h1 className="mt-4 text-xl font-bold leading-snug">{info.title}</h1>
                     <p className="mt-1 text-sm text-gray-400">
-                      {[formatDuration(duration), formatSize(info.size)].filter(Boolean).join(' • ')}
+                      {[
+                        formatDuration(duration),
+                        formatSize(info.size),
+                        typeof info.views === 'number' ? `${info.views.toLocaleString('id-ID')}x ditonton` : null,
+                        uploadDate ? `Diunggah ${uploadDate}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' • ')}
                     </p>
                   </>
                 ) : (
@@ -144,29 +172,44 @@ export default function VideoWatch() {
               <aside className="w-full shrink-0 lg:w-96">
                 <h2 className="mb-3 text-sm font-semibold text-gray-300">Berikutnya</h2>
                 <div className="space-y-3">
-                  {upNext.map((v) => (
-                    <Link
-                      key={v.videoToken}
-                      to={watchPath(v.videoToken)}
-                      state={{ video: { title: v.title, size: v.size, mimeType: v.mimeType } }}
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className="group flex gap-3"
-                    >
-                      <div className="w-40 shrink-0">
-                        <Thumb
-                          url={v.videoUrl}
-                          duration={durations[v.videoToken]}
-                          onDuration={(d) => setOtherDuration(v.videoToken, d)}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-cyan-400">
-                          {v.title}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500">{formatSize(v.size)}</p>
-                      </div>
-                    </Link>
-                  ))}
+                  {upNext.map((v) => {
+                    const date = formatUploadDate(v);
+                    return (
+                      <Link
+                        key={v.videoToken}
+                        to={watchPath(v.videoToken)}
+                        state={{
+                          video: {
+                            title: v.title,
+                            size: v.size,
+                            mimeType: v.mimeType,
+                            views: v.views,
+                            uploadedAt: v.uploadedAt,
+                            uploadedAtLocal: v.uploadedAtLocal,
+                          },
+                        }}
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="group flex gap-3"
+                      >
+                        <div className="w-40 shrink-0">
+                          <Thumb
+                            url={v.videoUrl}
+                            duration={durations[v.videoToken]}
+                            onDuration={(d) => setOtherDuration(v.videoToken, d)}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-cyan-400">
+                            {v.title}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {formatSize(v.size)}
+                            {date && ` • ${date}`}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                   {others.length > 0 && upNext.length === 0 && (
                     <p className="text-sm text-gray-500">Tidak ada video lain.</p>
                   )}

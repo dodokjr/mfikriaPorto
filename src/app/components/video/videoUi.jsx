@@ -1,6 +1,7 @@
 // Simpan di: src/app/components/video/videoUi.jsx
 // Dipakai bersama oleh VideoLibrary (/video) dan VideoWatch (/video/watch?id=...)
 
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HiSearch, HiArrowLeft, HiPlay } from 'react-icons/hi';
 
@@ -24,28 +25,100 @@ export function watchPath(videoToken) {
   return `/video/watch?id=${encodeURIComponent(videoToken)}`;
 }
 
-// Thumbnail = frame video (tanpa endpoint thumbnail khusus)
+// Pengaturan preview saat thumbnail disentuh / di-hover
+const PREVIEW_DELAY_MS = 400; // tahan sebentar supaya tidak jalan saat mouse sekadar lewat
+const PREVIEW_START = 0.5; // detik, sama dengan frame thumbnail (#t=0.5)
+const PREVIEW_SECONDS = 6; // lama potongan preview; setelah itu diulang dari awal
+
+// Thumbnail = frame video (tanpa endpoint thumbnail khusus).
+// Mouse masuk / jari menyentuh -> preview diputar tanpa suara; keluar -> kembali ke frame awal.
 export function Thumb({ url, duration, onDuration }) {
+  const videoRef = useRef(null);
+  const timer = useRef(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [progress, setProgress] = useState(0); // 0-100, bar tipis di bawah thumbnail
+
+  const start = () => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const v = videoRef.current;
+      if (!v) return;
+      v.currentTime = PREVIEW_START;
+      v.play()
+        .then(() => setPreviewing(true))
+        .catch(() => setPreviewing(false)); // autoplay diblokir / video belum bisa diputar
+    }, PREVIEW_DELAY_MS);
+  };
+
+  const stop = () => {
+    clearTimeout(timer.current);
+    const v = videoRef.current;
+    setPreviewing(false);
+    setProgress(0);
+    if (v) {
+      v.pause();
+      v.currentTime = PREVIEW_START;
+    }
+  };
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  // Ulang dari awal setelah PREVIEW_SECONDS, dan gerakkan bar progress
+  const onTimeUpdate = (e) => {
+    const v = e.currentTarget;
+    if (v.paused) return;
+    const end = Math.min(PREVIEW_START + PREVIEW_SECONDS, v.duration || Infinity);
+    if (v.currentTime >= end) {
+      v.currentTime = PREVIEW_START;
+      return;
+    }
+    setProgress(((v.currentTime - PREVIEW_START) / (end - PREVIEW_START)) * 100);
+  };
+
   return (
-    <div className="relative aspect-video overflow-hidden rounded-xl bg-gray-900">
+    <div
+      onMouseEnter={start}
+      onMouseLeave={stop}
+      onTouchStart={start}
+      onTouchEnd={stop}
+      onTouchMove={stop}
+      onTouchCancel={stop}
+      className="relative aspect-video overflow-hidden rounded-xl bg-gray-900"
+    >
       <video
-        src={`${url}#t=0.5`}
+        ref={videoRef}
+        src={`${url}#t=${PREVIEW_START}`}
         preload="metadata"
         muted
         playsInline
+        disablePictureInPicture
         onLoadedMetadata={(e) => onDuration && onDuration(e.currentTarget.duration)}
+        onTimeUpdate={onTimeUpdate}
         className="pointer-events-none h-full w-full object-cover"
       />
-      <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-2xl text-gray-950">
-          <HiPlay />
-        </span>
-      </div>
-      {duration ? (
+
+      {/* Tombol play saat hover, hilang begitu preview jalan */}
+      {!previewing && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/30 group-hover:opacity-100">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-2xl text-gray-950">
+            <HiPlay />
+          </span>
+        </div>
+      )}
+
+      {/* Durasi disembunyikan saat preview (seperti YouTube) */}
+      {duration && !previewing ? (
         <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white">
           {formatDuration(duration)}
         </span>
       ) : null}
+
+      {/* Bar progress preview */}
+      {previewing && (
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20">
+          <div className="h-full bg-cyan-400" style={{ width: `${progress}%` }} />
+        </div>
+      )}
     </div>
   );
 }

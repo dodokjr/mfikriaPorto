@@ -1,6 +1,6 @@
 // Simpan di: src/app/components/video/VideoWatch.jsx   -> route: /video/watch?id={videoToken}
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ensureGuestToken,
@@ -30,6 +30,207 @@ function formatUploadDate(video, month = 'short') {
   return video.uploadedAtLocal?.tanggal || null;
 }
 
+/* ========================= SHARE ========================= */
+
+const SOCIALS = [
+  { key: 'whatsapp', label: 'WhatsApp', className: 'bg-green-600 hover:bg-green-500' },
+  { key: 'facebook', label: 'Facebook', className: 'bg-blue-600 hover:bg-blue-500' },
+  { key: 'twitter', label: 'X / Twitter', className: 'bg-gray-700 hover:bg-gray-600' },
+  { key: 'telegram', label: 'Telegram', className: 'bg-sky-600 hover:bg-sky-500' },
+  { key: 'linkedin', label: 'LinkedIn', className: 'bg-blue-800 hover:bg-blue-700' },
+];
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) {
+    /* lanjut ke fallback */
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+function CopyRow({ label, value, copied, onCopy, multiline = false }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium text-gray-400">{label}</p>
+      <div className="flex items-stretch gap-2">
+        {multiline ? (
+          <textarea
+            readOnly
+            value={value}
+            rows={3}
+            onFocus={(e) => e.target.select()}
+            className="min-w-0 flex-1 resize-none rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-xs text-gray-200 outline-none focus:border-cyan-500"
+          />
+        ) : (
+          <input
+            readOnly
+            value={value}
+            onFocus={(e) => e.target.select()}
+            className="min-w-0 flex-1 rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-200 outline-none focus:border-cyan-500"
+          />
+        )}
+        <button
+          type="button"
+          onClick={onCopy}
+          className={`shrink-0 rounded-lg px-4 text-sm font-semibold transition ${
+            copied ? 'bg-green-500 text-gray-950' : 'bg-cyan-500 text-gray-950 hover:bg-cyan-400'
+          }`}
+        >
+          {copied ? 'Tersalin' : 'Salin'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ShareDialog({ share, title, onClose }) {
+  const [copied, setCopied] = useState(null); // 'link' | 'embed' | null
+  const timer = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      clearTimeout(timer.current);
+    };
+  }, [onClose]);
+
+  const handleCopy = async (kind, text) => {
+    if (await copyText(text)) {
+      setCopied(kind);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(null), 2000);
+    }
+  };
+
+  const social = share.social || {};
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Bagikan video"
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl sm:rounded-2xl"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold">Bagikan</h3>
+            {title && <p className="mt-0.5 truncate text-sm text-gray-400">{title}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Tutup"
+            className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-800 hover:text-white"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Media sosial */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {SOCIALS.filter((s) => social[s.key]).map((s) => (
+            <a
+              key={s.key}
+              href={social[s.key]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition ${s.className}`}
+            >
+              {s.label}
+            </a>
+          ))}
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {share.shareUrl && (
+            <CopyRow
+              label="Link video"
+              value={share.shareUrl}
+              copied={copied === 'link'}
+              onCopy={() => handleCopy('link', share.shareUrl)}
+            />
+          )}
+          {share.embedCode && (
+            <CopyRow
+              label="Kode embed"
+              value={share.embedCode}
+              multiline
+              copied={copied === 'embed'}
+              onCopy={() => handleCopy('embed', share.embedCode)}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShareButton({ share, title }) {
+  const [open, setOpen] = useState(false);
+  if (!share || !share.shareUrl) return null;
+
+  // Di HP, pakai menu share bawaan perangkat kalau ada; kalau dibatalkan/gagal, buka dialog
+  const handleClick = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      try {
+        await navigator.share({ title: title || undefined, url: share.shareUrl });
+        return;
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+      }
+    }
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"
+          />
+        </svg>
+        Bagikan
+      </button>
+      {open && <ShareDialog share={share} title={title} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+/* ========================= HALAMAN ========================= */
+
 export default function VideoWatch() {
   const [params] = useSearchParams();
   const id = params.get('id');
@@ -38,7 +239,8 @@ export default function VideoWatch() {
 
   const [search, setSearch] = useState('');
   const [session, setSession] = useState(null);
-  const [info, setInfo] = useState(null); // { title, size, mimeType, views, uploadedAt, uploadedAtLocal }
+  // { title, size, mimeType, views, uploadedAt, uploadedAtLocal, share }
+  const [info, setInfo] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | ready | error
   const [duration, setDuration] = useState(0);
   const [playerError, setPlayerError] = useState(false);
@@ -162,6 +364,9 @@ export default function VideoWatch() {
                         .filter(Boolean)
                         .join(' • ')}
                     </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <ShareButton share={info.share} title={info.title} />
+                    </div>
                   </>
                 ) : (
                   <div className="mt-4 h-6 w-2/3 animate-pulse rounded bg-gray-900" />
@@ -186,6 +391,7 @@ export default function VideoWatch() {
                             views: v.views,
                             uploadedAt: v.uploadedAt,
                             uploadedAtLocal: v.uploadedAtLocal,
+                            share: v.share,
                           },
                         }}
                         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from "./layout";
 import { GitHubCalendar } from 'react-github-calendar';
 import CardRepos from './components/project/cardRepos';
+import { apiFetch } from '../libs/Mfikriaapi';
 
 export default function ProjectApp() {
   const [data, setData] = useState(null);
@@ -9,13 +10,19 @@ export default function ProjectApp() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("https://api-mfikria.vercel.app/v2/github/dodokjr/repos")
-      .then((res) => {
-        if (!res.ok) throw new Error("Gagal mengambil data dari API");
-        return res.json();
+    let active = true; // cegah setState setelah komponen di-unmount
+
+    // apiFetch otomatis: ambil/pakai ulang Access_Token guest (/guest-token),
+    // menempelkan ?query=&tgl= ke URL, dan mencoba sekali lagi dengan token baru kalau dibalas 401.
+    apiFetch("/v2/github/dodokjr/repos")
+      .then(async (res) => {
+        const body = await res.json().catch(() => null);
+        if (!res.ok) throw new Error((body && body.message) || "Gagal mengambil data dari API");
+        return body;
       })
       .then((body) => {
-        if (body.message) {
+        if (!active) return;
+        if (body && body.message) {
           setError(body.message);
         } else {
           setData(body);
@@ -23,9 +30,15 @@ export default function ProjectApp() {
       })
       .catch((err) => {
         console.error("API tidak merespons, silakan hubungi: ffikri604@gmail.com", err);
-        setError("API server sedang tidak merespons.");
+        if (active) setError("API server sedang tidak merespons.");
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Palet warna cerah (Hijau Neon GitHub Standard)

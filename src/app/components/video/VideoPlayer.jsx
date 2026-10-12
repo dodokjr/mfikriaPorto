@@ -1,7 +1,3 @@
-// Simpan di: src/app/components/video/VideoPlayer.jsx
-// Player kustom ala YouTube, tema hitam + pink.
-// Tanpa kontrol bawaan browser (menu titik tiga berisi "Download" hilang), tanpa klik kanan,
-// tanpa Picture-in-Picture / cast, plus watermark ID guest yang berpindah-pindah.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -21,8 +17,8 @@ import {
 } from 'react-icons/io5';
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
-const CORNERS = ['top-3 left-3', 'top-3 right-3', 'bottom-16 right-3', 'bottom-16 left-3'];
 const SEEK_STEP = 10; // detik, tombol J / L dan klik ganda sisi kiri/kanan
+const STALL_RECOVER_MS = 8000; // streaming macet selama ini -> minta ulang data
 
 function fmt(sec) {
   if (!Number.isFinite(sec) || sec < 0) return '0:00';
@@ -32,33 +28,95 @@ function fmt(sec) {
   return `${h > 0 ? `${h}:${String(m).padStart(2, '0')}` : m}:${String(s).padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ src, title = '', watermark = '', onError, onLoadedMetadata }) {
+export default function VideoPlayer({ src, title = '', onError, onLoadedMetadata }) {
   const wrapRef = useRef(null);
   const videoRef = useRef(null);
   const barRef = useRef(null);
+
+  // Elemen yang digambar langsung (tanpa React state)
+  const fillRef = useRef(null);
+  const bufRef = useRef(null);
+  const hoverFillRef = useRef(null);
+  const headRef = useRef(null);
+  const tipRef = useRef(null);
+  const curRef = useRef(null);
+
   const hideTimer = useRef(null);
   const clickTimer = useRef(null);
   const flashTimer = useRef(null);
+  const stallTimer = useRef(null);
+  const rafRef = useRef(0);
+  const seekRaf = useRef(0);
+  const hoverRaf = useRef(0);
+  const lastWake = useRef(0);
+  const lastSec = useRef(-1);
   const dragging = useRef(false);
+  const dragPct = useRef(0);
+  const hoverPct = useRef(0);
+  const visibleRef = useRef(true);
 
   const [playing, setPlaying] = useState(false);
   const [waiting, setWaiting] = useState(true);
   const [ended, setEnded] = useState(false);
-  const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [buffered, setBuffered] = useState(0);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [showSpeed, setShowSpeed] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [awake, setAwake] = useState(true);
-  const [hover, setHover] = useState(null); // { pct, sec }
-  const [corner, setCorner] = useState(0);
   const [flash, setFlash] = useState(null); // { type: 'play' | 'pause' | 'back' | 'forward', id }
+
+  /* ---------- menggambar progress langsung ke DOM ---------- */
+  const paint = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const d = v.duration || 0;
+    const t = dragging.current ? dragPct.current * d : v.currentTime;
+    const r = d ? Math.min(Math.max(t / d, 0), 1) : 0;
+    if (fillRef.current) fillRef.current.style.transform = `scaleX(${r})`;
+    if (headRef.current) headRef.current.style.left = `${r * 100}%`;
+    const sec = Math.floor(t);
+    if (sec !== lastSec.current) {
+      lastSec.current = sec;
+      if (curRef.current) curRef.current.textContent = fmt(t);
+      if (barRef.current) barRef.current.setAttribute('aria-valuenow', String(sec));
+    }
+  }, []);
+
+  const paintBuffer = useCallback(() => {
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    let end = 0;
+    for (let i = 0; i < v.buffered.length; i += 1) {
+      if (v.buffered.start(i) <= v.currentTime + 0.1 && v.currentTime <= v.buffered.end(i)) {
+        end = v.buffered.end(i);
+        break;
+      }
+    }
+    if (bufRef.current) bufRef.current.style.transform = `scaleX(${Math.min(end / v.duration, 1)})`;
+  }, []);
+
+  // Loop gambar hanya jalan saat video main (dan berhenti otomatis saat tab tersembunyi)
+  useEffect(() => {
+    if (!playing) {
+      cancelAnimationFrame(rafRef.current);
+      paint();
+      return undefined;
+    }
+    const tick = () => {
+      if (visibleRef.current || dragging.current) paint();
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [playing, paint]);
 
   /* ---------- kontrol muncul saat mouse bergerak, hilang saat diam ---------- */
   const wake = useCallback(() => {
+    const now = performance.now();
+    if (now - lastWake.current < 200) return; // abaikan event mouse beruntun
+    lastWake.current = now;
     setAwake(true);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setAwake(false), 2500);
@@ -69,6 +127,10 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
       clearTimeout(hideTimer.current);
       clearTimeout(clickTimer.current);
       clearTimeout(flashTimer.current);
+      clearTimeout(stallTimer.current);
+      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(seekRaf.current);
+      cancelAnimationFrame(hoverRaf.current);
     },
     []
   );
@@ -79,13 +141,6 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
     clearTimeout(flashTimer.current);
     flashTimer.current = setTimeout(() => setFlash(null), 650);
   }, []);
-
-  /* ---------- watermark pindah sudut tiap 15 detik ---------- */
-  useEffect(() => {
-    if (!watermark) return undefined;
-    const t = setInterval(() => setCorner((c) => (c + 1) % CORNERS.length), 15000);
-    return () => clearInterval(t);
-  }, [watermark]);
 
   /* ---------- fullscreen ---------- */
   useEffect(() => {
@@ -124,6 +179,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = Math.min(Math.max(v.currentTime + delta, 0), v.duration || 0);
+    paint();
   };
 
   const seekStep = (dir) => {
@@ -156,13 +212,54 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
     return Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
   };
 
-  const seekFromEvent = (e) => {
+  // Saat menggeser: tampilan bar mengikuti jari/kursor langsung, tapi seek ke video
+  // dibatasi 1x per frame dan dilewati kalau seek sebelumnya belum selesai.
+  const queueSeek = (pct) => {
+    dragPct.current = pct;
+    if (seekRaf.current) return;
+    seekRaf.current = requestAnimationFrame(() => {
+      seekRaf.current = 0;
+      const v = videoRef.current;
+      if (!v || !v.duration || v.seeking) return;
+      const target = dragPct.current * v.duration;
+      if (typeof v.fastSeek === 'function') v.fastSeek(target);
+      else v.currentTime = target;
+    });
+  };
+
+  const paintHover = () => {
+    hoverRaf.current = 0;
     const v = videoRef.current;
-    if (v && duration) v.currentTime = pctFromEvent(e) * duration;
+    const d = (v && v.duration) || 0;
+    const pct = hoverPct.current;
+    if (hoverFillRef.current) hoverFillRef.current.style.transform = `scaleX(${pct})`;
+    if (tipRef.current) {
+      tipRef.current.style.left = `${pct * 100}%`;
+      tipRef.current.textContent = fmt(pct * d);
+      tipRef.current.style.opacity = d > 0 ? '1' : '0';
+    }
+    if (dragging.current) paint();
+  };
+
+  const hideHover = () => {
+    if (dragging.current) return;
+    if (hoverFillRef.current) hoverFillRef.current.style.transform = 'scaleX(0)';
+    if (tipRef.current) tipRef.current.style.opacity = '0';
+  };
+
+  const endDrag = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    cancelAnimationFrame(seekRaf.current);
+    seekRaf.current = 0;
+    const v = videoRef.current;
+    if (v && v.duration) v.currentTime = dragPct.current * v.duration; // seek akhir yang tepat
+    paint();
   };
 
   /* ---------- keyboard (sama seperti YouTube) ---------- */
   const onKeyDown = (e) => {
+    wake(); // tombol apa pun (termasuk Tab) memunculkan kontrol
     const map = {
       ' ': toggle,
       k: toggle,
@@ -182,13 +279,17 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
     if (!action && /^[0-9]$/.test(e.key)) {
       action = () => {
         const v = videoRef.current;
-        if (v && v.duration) v.currentTime = (Number(e.key) / 10) * v.duration;
+        if (v && v.duration) {
+          v.currentTime = (Number(e.key) / 10) * v.duration;
+          paint();
+        }
       };
     }
-    if (action) {
+    // Biarkan tombol/slider yang sedang difokus menangani Spasi & panah sendiri
+    const onControl = e.target !== e.currentTarget;
+    if (action && !(onControl && (e.key === ' ' || e.key.startsWith('Arrow')))) {
       e.preventDefault();
       action();
-      wake();
     }
   };
 
@@ -210,12 +311,22 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
     else toggleFullscreen();
   };
 
-  const playedPct = duration ? (time / duration) * 100 : 0;
   const visible = awake || !playing || showSpeed;
+  visibleRef.current = visible;
+  useEffect(() => {
+    if (visible) {
+      paint();
+      paintBuffer();
+    }
+  }, [visible, paint, paintBuffer]);
+
   const VolumeIcon = muted || volume === 0 ? IoVolumeMute : volume < 0.34 ? IoVolumeLow : volume < 0.67 ? IoVolumeMedium : IoVolumeHigh;
   const FlashIcon = flash
     ? { play: IoPlay, pause: IoPause, back: IoPlayBack, forward: IoPlayForward }[flash.type]
     : null;
+
+  const layerShow = 'visible opacity-100';
+  const layerHide = 'pointer-events-none invisible opacity-0';
 
   return (
     <div
@@ -224,6 +335,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
       onKeyDown={onKeyDown}
       onMouseMove={wake}
       onTouchStart={wake}
+      onFocus={wake}
       onMouseLeave={() => playing && setAwake(false)}
       onContextMenu={(e) => e.preventDefault()}
       className={`group relative h-full w-full select-none overflow-hidden bg-black outline-none ${
@@ -235,6 +347,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
         src={src}
         autoPlay
         playsInline
+        preload="auto"
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture
         disableRemotePlayback
@@ -242,17 +355,14 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
         onLoadedMetadata={(e) => {
           setDuration(e.currentTarget.duration);
           if (onLoadedMetadata) onLoadedMetadata(e.currentTarget.duration);
+          paint();
         }}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onProgress={(e) => {
-          const v = e.currentTarget;
-          for (let i = 0; i < v.buffered.length; i += 1) {
-            if (v.buffered.start(i) <= v.currentTime && v.currentTime <= v.buffered.end(i)) {
-              setBuffered(v.buffered.end(i));
-              break;
-            }
-          }
+        onTimeUpdate={() => {
+          if (!playing) paint(); // saat main, rAF yang menggambar
+          paintBuffer();
         }}
+        onSeeked={paint}
+        onProgress={paintBuffer}
         onPlay={() => {
           setPlaying(true);
           setEnded(false);
@@ -263,9 +373,23 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
           setPlaying(false);
           setEnded(true);
         }}
-        onWaiting={() => setWaiting(true)}
-        onCanPlay={() => setWaiting(false)}
-        onPlaying={() => setWaiting(false)}
+        onWaiting={() => {
+          setWaiting(true);
+          // Streaming macet lama: minta ulang data dari posisi sekarang
+          clearTimeout(stallTimer.current);
+          stallTimer.current = setTimeout(() => {
+            const v = videoRef.current;
+            if (v && !v.paused && v.readyState < 3) v.currentTime = v.currentTime;
+          }, STALL_RECOVER_MS);
+        }}
+        onCanPlay={() => {
+          setWaiting(false);
+          clearTimeout(stallTimer.current);
+        }}
+        onPlaying={() => {
+          setWaiting(false);
+          clearTimeout(stallTimer.current);
+        }}
         onVolumeChange={(e) => {
           setVolume(e.currentTarget.volume);
           setMuted(e.currentTarget.muted);
@@ -279,21 +403,12 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
 
       {/* Judul di atas */}
       <div
-        className={`pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 to-transparent px-4 pb-10 pt-3 transition-opacity duration-300 ${
-          visible ? 'opacity-100' : 'opacity-0'
+        className={`pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 to-transparent px-4 pb-10 pt-3 transition-[opacity,visibility] duration-300 ${
+          visible ? layerShow : 'invisible opacity-0'
         }`}
       >
         <p className="truncate text-base font-semibold text-white">{title}</p>
       </div>
-
-      {/* Watermark ID guest (menyulitkan penyebaran hasil rekam layar) */}
-      {watermark && (
-        <span
-          className={`pointer-events-none absolute ${CORNERS[corner]} rounded bg-black/20 px-2 py-0.5 text-xs font-medium tracking-wider text-white/30 transition-all duration-700`}
-        >
-          {watermark}
-        </span>
-      )}
 
       {/* Ikon sesaat: play / pause / mundur 10 dtk / maju 10 dtk */}
       {flash && FlashIcon && (
@@ -308,11 +423,8 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
           }`}
         >
           <div className="flex flex-col items-center gap-2">
-            <div className="relative">
-              <span className="absolute inset-0 animate-ping rounded-full bg-pink-500/40" />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-black/70 text-3xl text-pink-400 ring-1 ring-pink-500/40">
-                <FlashIcon />
-              </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/70 text-3xl text-pink-400 ring-1 ring-pink-500/40">
+              <FlashIcon />
             </div>
             {(flash.type === 'back' || flash.type === 'forward') && (
               <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-xs font-semibold text-pink-300">
@@ -335,7 +447,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
         <button
           onClick={toggle}
           aria-label="Putar"
-          className="absolute left-1/2 top-1/2 flex h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-pink-500 text-4xl text-black shadow-[0_0_40px_rgba(236,72,153,0.55)] transition hover:scale-110 hover:bg-pink-400"
+          className="absolute left-1/2 top-1/2 flex h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-pink-500 text-4xl text-black shadow-[0_0_40px_rgba(236,72,153,0.55)] transition-transform hover:scale-110 hover:bg-pink-400"
         >
           <IoPlay className="ml-1" />
         </button>
@@ -355,61 +467,62 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
 
       {/* Kontrol bawah */}
       <div
-        className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 pb-2 pt-12 transition-opacity duration-300 ${
-          visible ? 'opacity-100' : 'pointer-events-none opacity-0'
+        className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 pb-2 pt-12 transition-[opacity,visibility] duration-300 ${
+          visible ? layerShow : layerHide
         }`}
       >
         {/* Progress bar */}
         <div
           ref={barRef}
+          role="slider"
+          aria-label="Posisi video"
+          aria-valuemin={0}
+          aria-valuemax={Math.floor(duration) || 0}
+          aria-valuenow={0}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
             dragging.current = true;
-            seekFromEvent(e);
+            const pct = pctFromEvent(e);
+            hoverPct.current = pct;
+            queueSeek(pct);
+            paintHover();
           }}
           onPointerMove={(e) => {
             const pct = pctFromEvent(e);
-            setHover({ pct: pct * 100, sec: pct * duration });
-            if (dragging.current) seekFromEvent(e);
+            hoverPct.current = pct;
+            if (!hoverRaf.current) hoverRaf.current = requestAnimationFrame(paintHover);
+            if (dragging.current) queueSeek(pct);
           }}
           onPointerUp={() => {
-            dragging.current = false;
+            endDrag();
+            hideHover();
           }}
-          onPointerLeave={() => setHover(null)}
-          className="group/bar relative flex h-4 cursor-pointer items-center"
+          onPointerCancel={() => {
+            endDrag();
+            hideHover();
+          }}
+          onPointerLeave={hideHover}
+          className="group/bar relative flex h-6 cursor-pointer touch-none items-center sm:h-4"
         >
-          <div className="relative h-[3px] w-full rounded-full bg-white/25 transition-all group-hover/bar:h-[5px]">
-            {/* buffer */}
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-white/40"
-              style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }}
-            />
-            {/* posisi hover */}
-            {hover && (
-              <div
-                className="absolute inset-y-0 left-0 rounded-full bg-pink-300/40"
-                style={{ width: `${hover.pct}%` }}
-              />
-            )}
-            {/* sudah ditonton */}
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-pink-500"
-              style={{ width: `${playedPct}%` }}
-            />
+          <div className="relative flex h-[5px] w-full items-center">
+            <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-white/25 transition-[height] group-hover/bar:h-[5px] group-active/bar:h-[5px]">
+              {/* buffer */}
+              <div ref={bufRef} className="absolute inset-y-0 left-0 w-full origin-left bg-white/40 [transform:scaleX(0)]" />
+              {/* posisi hover */}
+              <div ref={hoverFillRef} className="absolute inset-y-0 left-0 w-full origin-left bg-pink-300/40 [transform:scaleX(0)]" />
+              {/* sudah ditonton */}
+              <div ref={fillRef} className="absolute inset-y-0 left-0 w-full origin-left bg-pink-500 [transform:scaleX(0)]" />
+            </div>
             {/* kepala progress */}
             <div
-              className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.8)] transition-transform group-hover/bar:scale-100"
-              style={{ left: `${playedPct}%` }}
+              ref={headRef}
+              className="absolute left-0 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.8)] transition-transform group-hover/bar:scale-100 group-active/bar:scale-100"
             />
           </div>
-          {hover && duration > 0 && (
-            <span
-              className="pointer-events-none absolute -top-7 -translate-x-1/2 rounded bg-black/90 px-1.5 py-0.5 text-xs font-medium text-white ring-1 ring-pink-500/40"
-              style={{ left: `${hover.pct}%` }}
-            >
-              {fmt(hover.sec)}
-            </span>
-          )}
+          <span
+            ref={tipRef}
+            className="pointer-events-none absolute -top-7 left-0 -translate-x-1/2 rounded bg-black/90 px-1.5 py-0.5 text-xs font-medium text-white opacity-0 ring-1 ring-pink-500/40"
+          />
         </div>
 
         {/* Tombol */}
@@ -417,7 +530,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
           <button
             onClick={toggle}
             aria-label={playing ? 'Jeda (k)' : 'Putar (k)'}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-2xl transition hover:bg-pink-500/15 hover:text-pink-400"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-2xl transition-colors hover:bg-pink-500/15 hover:text-pink-400"
           >
             {playing ? <IoPause /> : <IoPlay />}
           </button>
@@ -426,7 +539,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
             <button
               onClick={toggleMute}
               aria-label={muted ? 'Suara aktif (m)' : 'Bisukan (m)'}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-pink-500/15 hover:text-pink-400"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition-colors hover:bg-pink-500/15 hover:text-pink-400"
             >
               <VolumeIcon />
             </button>
@@ -438,12 +551,12 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
               value={muted ? 0 : volume}
               onChange={(e) => changeVolume(Number(e.target.value))}
               aria-label="Volume"
-              className="h-1 w-0 cursor-pointer accent-pink-500 opacity-0 transition-all group-hover/vol:ml-1 group-hover/vol:w-20 group-hover/vol:opacity-100 focus:ml-1 focus:w-20 focus:opacity-100"
+              className="h-1 w-0 cursor-pointer accent-pink-500 opacity-0 transition-[width,margin,opacity] group-hover/vol:ml-1 group-hover/vol:w-20 group-hover/vol:opacity-100 focus:ml-1 focus:w-20 focus:opacity-100"
             />
           </div>
 
           <span className="ml-2 text-[13px] tabular-nums text-gray-100">
-            {fmt(time)} <span className="text-gray-400">/ {fmt(duration)}</span>
+            <span ref={curRef}>0:00</span> <span className="text-gray-400">/ {fmt(duration)}</span>
           </span>
 
           <div className="ml-auto flex items-center gap-1">
@@ -459,7 +572,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
                 <IoSettingsSharp />
               </button>
               {showSpeed && (
-                <div className="absolute bottom-12 right-0 w-44 overflow-hidden rounded-xl border border-pink-500/30 bg-black/95 py-1 shadow-[0_0_30px_rgba(236,72,153,0.25)] backdrop-blur">
+                <div className="absolute bottom-12 right-0 w-44 overflow-hidden rounded-xl border border-pink-500/30 bg-black py-1 shadow-lg">
                   <p className="border-b border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-pink-400">
                     Kecepatan putar
                   </p>
@@ -467,7 +580,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
                     <button
                       key={s}
                       onClick={() => changeSpeed(s)}
-                      className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition hover:bg-pink-500/15 ${
+                      className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm transition-colors hover:bg-pink-500/15 ${
                         s === speed ? 'font-semibold text-pink-400' : 'text-gray-200'
                       }`}
                     >
@@ -484,7 +597,7 @@ export default function VideoPlayer({ src, title = '', watermark = '', onError, 
             <button
               onClick={toggleFullscreen}
               aria-label={fullscreen ? 'Keluar layar penuh (f)' : 'Layar penuh (f)'}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-pink-500/15 hover:text-pink-400"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition-colors hover:bg-pink-500/15 hover:text-pink-400"
             >
               {fullscreen ? <IoContract /> : <IoExpand />}
             </button>

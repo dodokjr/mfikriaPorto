@@ -9,6 +9,8 @@ import {
   videoStreamUrl,
 } from '../utilities/guestToken';
 import VideoPlayer from './VideoPlayer';
+import VideoReactions from './VideoReactions';
+import VideoComments from './VideoComments';
 import { Thumb, VideoToolbar, formatDuration, formatSize, watchPath } from './videoUi';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
@@ -365,12 +367,16 @@ export default function VideoWatch() {
                         .join(' • ')}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <VideoReactions key={id} videoId={id} session={session} />
                       <ShareButton share={info.share} title={info.title} />
                     </div>
                   </>
                 ) : (
                   <div className="mt-4 h-6 w-2/3 animate-pulse rounded bg-gray-900" />
                 )}
+
+                {/* Komentar */}
+                <VideoComments key={id} videoId={id} session={session} />
               </div>
 
               {/* Berikutnya */}

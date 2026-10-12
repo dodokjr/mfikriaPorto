@@ -12,8 +12,10 @@ export default function ProjectApp() {
   useEffect(() => {
     let active = true; // cegah setState setelah komponen di-unmount
 
-    // apiFetch otomatis: ambil/pakai ulang Access_Token guest (/guest-token),
-    // menempelkan ?query=&tgl= ke URL, dan mencoba sekali lagi dengan token baru kalau dibalas 401.
+    // apiFetch otomatis:
+    // - baca guest token dari sessionStorage dan tanya backend (/guest-token/status) apakah masih berlaku
+    // - kalau tidak valid / lewat 24 jam, buat token baru lewat /guest-token
+    // - tempel ?query=&tgl= ke URL, dan kalau dibalas 401 buat token baru lalu ulangi 1x
     apiFetch("/v2/github/dodokjr/repos")
       .then(async (res) => {
         const body = await res.json().catch(() => null);
@@ -49,7 +51,7 @@ export default function ProjectApp() {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
-        
+
         {/* Header Section */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
@@ -66,14 +68,14 @@ export default function ProjectApp() {
             Kontribusi GitHub
           </h2>
           <div className="flex justify-center overflow-x-auto pb-2">
-            <GitHubCalendar 
-              username="dodokjr" 
-              blockMargin={4} 
-              blockSize={14} 
-              blockRadius={4} 
-              theme={themeInput} 
+            <GitHubCalendar
+              username="dodokjr"
+              blockMargin={4}
+              blockSize={14}
+              blockRadius={4}
+              theme={themeInput}
               colorScheme="dark"
-              fontSize={13} 
+              fontSize={13}
               showWeekdayLabels
             />
           </div>
@@ -84,21 +86,21 @@ export default function ProjectApp() {
           <h2 className="text-xl font-semibold text-slate-200 text-center">
             Statistik & Aktivitas
           </h2>
-          
+
           {/* Top Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 flex items-center justify-center hover:border-slate-700 transition">
-              <img 
-                className="w-full h-auto object-contain max-h-52" 
-                src="https://github-readme-streak-stats.herokuapp.com?user=dodokjr&theme=tokyonight&hide_border=true&border_radius=8&mode=weekly" 
+              <img
+                className="w-full h-auto object-contain max-h-52"
+                src="https://github-readme-streak-stats.herokuapp.com?user=dodokjr&theme=tokyonight&hide_border=true&border_radius=8&mode=weekly"
                 alt="dodokjr GitHub streak"
                 loading="lazy"
               />
             </div>
             <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 flex items-center justify-center hover:border-slate-700 transition">
-              <img 
-                className="w-full h-auto object-contain max-h-52" 
-                src="http://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=dodokjr&theme=aura" 
+              <img
+                className="w-full h-auto object-contain max-h-52"
+                src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=dodokjr&theme=aura"
                 alt="Dodokjr GitHub Contribution"
                 loading="lazy"
               />
@@ -107,9 +109,9 @@ export default function ProjectApp() {
 
           {/* Top Languages */}
           <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 flex justify-center hover:border-slate-700 transition">
-            <img 
-              className="w-full max-w-md h-auto object-contain" 
-              src="https://denvercoder1-github-readme-stats.vercel.app/api/top-langs/?username=dodokjr&langs_count=8&layout=compact&theme=react&border_color=00083B&bg_color=00083B&title_color=DAD0FE&icon_color=F5E572" 
+            <img
+              className="w-full max-w-md h-auto object-contain"
+              src="https://denvercoder1-github-readme-stats.vercel.app/api/top-langs/?username=dodokjr&langs_count=8&layout=compact&theme=react&border_color=00083B&bg_color=00083B&title_color=DAD0FE&icon_color=F5E572"
               alt="Dodokjr Top Languages"
               loading="lazy"
             />
@@ -117,9 +119,9 @@ export default function ProjectApp() {
 
           {/* Activity Graph */}
           <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 flex justify-center hover:border-slate-700 transition">
-            <img 
-              className="w-full h-auto object-contain" 
-              src="https://github-readme-activity-graph.vercel.app/graph?username=dodokjr&custom_title=Dodokjr%27s%20GitHub%20Activity%20Graph&bg_color=00083B&color=6E49F5&line=6E49F5&point=6E49F5&area_color=0000&title_color=DAD0FE&area=true" 
+            <img
+              className="w-full h-auto object-contain"
+              src="https://github-readme-activity-graph.vercel.app/graph?username=dodokjr&custom_title=Dodokjr%27s%20GitHub%20Activity%20Graph&bg_color=00083B&color=6E49F5&line=6E49F5&point=6E49F5&area_color=0000&title_color=DAD0FE&area=true"
               alt="Dodokjr GitHub Activity Graph"
               loading="lazy"
             />
@@ -146,8 +148,8 @@ export default function ProjectApp() {
           ) : error ? (
             <div className="text-center py-12 p-6 bg-rose-500/10 border border-rose-500/20 rounded-xl">
               <p className="text-rose-400 font-medium mb-3">Terjadi kendala saat memuat data repositori.</p>
-              <a 
-                href="mailto:ffikri604@gmail.com" 
+              <a
+                href="mailto:ffikri604@gmail.com"
                 className="inline-flex items-center px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg transition"
               >
                 Hubungi Pengembang (ffikri604@gmail.com)

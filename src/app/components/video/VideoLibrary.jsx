@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { HiRefresh } from 'react-icons/hi';
-import { fetchVideoLibrary } from '../utilities/guestToken';
+import { fetchVideoLibrary } from '../utilities/guestToken'; // folder "utilities" (sama dengan yang dipakai App.jsx)
 import { Thumb, VideoToolbar, formatSize, watchPath } from './videoUi';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
@@ -33,6 +33,8 @@ export default function VideoLibrary() {
 
   const load = useCallback(() => {
     setStatus('loading');
+    // Backend mengacak urutan di setiap pemanggilan, jadi video pertama berbeda-beda.
+    // Token guest 24 jam diurus otomatis (sessionStorage -> cek backend -> buat baru kalau expired).
     fetchVideoLibrary()
       .then((list) => {
         setVideos(list);

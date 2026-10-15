@@ -9,6 +9,7 @@ import Contac from './components/utilities/contac';
 import Loading from './components/utilities/Loading';
 import SectionStar from './components/home/SectionStar';
 import Benner from './components/utilities/Benner.jsx';
+import FeedbackSection from './components/feedback/Feedbacksection.jsx'; // saran & kritik (tampil di atas Contac)
 import { HiSparkles, HiX } from 'react-icons/hi';
 import { ensureGuestToken } from './components/utilities/guestToken.js'; // sesuaikan path dengan lokasi file guestToken.js
 
@@ -115,6 +116,7 @@ function App() {
           <HomeProject api={data} />
           <SectionStar />
           <BlogHome api={data} />
+          <FeedbackSection />
           <Contac api={data} />
         </div>
       </main>

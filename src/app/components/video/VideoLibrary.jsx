@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { HiRefresh } from 'react-icons/hi';
 import { fetchVideoLibrary } from '../utilities/guestToken'; // folder "utilities" (sama dengan yang dipakai App.jsx)
-import { Thumb, VideoToolbar, formatSize, watchPath } from './videoUi';
+import { VideoToolbar, formatSize, watchPath } from './videoUi';
+import VideoThumb from './Videothumb';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
 // Tanggal upload video, contoh: "9 Okt 2026" (zona waktu WIB).
@@ -29,7 +30,6 @@ export default function VideoLibrary() {
   const [search, setSearch] = useState(params.get('q') || '');
   const [videos, setVideos] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | ready | error
-  const [durations, setDurations] = useState({});
 
   const load = useCallback(() => {
     setStatus('loading');
@@ -54,9 +54,6 @@ export default function VideoLibrary() {
   useEffect(() => {
     setSearch(params.get('q') || '');
   }, [params]);
-
-  const setDuration = (token, d) =>
-    setDurations((prev) => (prev[token] === d ? prev : { ...prev, [token]: d }));
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -118,11 +115,7 @@ export default function VideoLibrary() {
                       }}
                       className="group block text-left"
                     >
-                      <Thumb
-                        url={v.videoUrl}
-                        duration={durations[v.videoToken]}
-                        onDuration={(d) => setDuration(v.videoToken, d)}
-                      />
+                      <VideoThumb token={v.videoToken} title={v.title} />
                       <h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-cyan-400">
                         {v.title}
                       </h3>

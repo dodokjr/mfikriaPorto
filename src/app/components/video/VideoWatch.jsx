@@ -11,7 +11,8 @@ import {
 import VideoPlayer from './VideoPlayer';
 import VideoReactions from './VideoReactions';
 import VideoComments from './VideoComments';
-import { Thumb, VideoToolbar, formatDuration, formatSize, watchPath } from './videoUi';
+import VideoThumb from './Videothumb';
+import { VideoToolbar, formatDuration, formatSize, watchPath } from './videoUi';
 import Layout from '../../layout'; // sesuaikan dengan lokasi layout (App memakai './layout')
 
 // Tanggal upload video (WIB). month: 'long' -> "9 Oktober 2026", 'short' -> "9 Okt 2026".
@@ -247,7 +248,6 @@ export default function VideoWatch() {
   const [duration, setDuration] = useState(0);
   const [playerError, setPlayerError] = useState(false);
   const [others, setOthers] = useState([]);
-  const [durations, setDurations] = useState({});
 
   // Muat info video tiap kali ?id= berubah (termasuk saat klik video "Berikutnya")
   useEffect(() => {
@@ -297,8 +297,6 @@ export default function VideoWatch() {
   }, []);
 
   const upNext = others.filter((v) => !info || v.title !== info.title);
-  const setOtherDuration = (token, d) =>
-    setDurations((prev) => (prev[token] === d ? prev : { ...prev, [token]: d }));
 
   const goSearch = (q) => navigate(q.trim() ? `/video?q=${encodeURIComponent(q.trim())}` : '/video');
 
@@ -404,11 +402,7 @@ export default function VideoWatch() {
                         className="group flex gap-3"
                       >
                         <div className="w-40 shrink-0">
-                          <Thumb
-                            url={v.videoUrl}
-                            duration={durations[v.videoToken]}
-                            onDuration={(d) => setOtherDuration(v.videoToken, d)}
-                          />
+                          <VideoThumb token={v.videoToken} title={v.title} small />
                         </div>
                         <div className="min-w-0">
                           <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-cyan-400">

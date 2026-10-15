@@ -8,16 +8,9 @@ import {
   HiShoppingBag,
   HiArrowRight,
   HiCube,
+  HiEye,
 } from 'react-icons/hi';
 
-// ---------------------------------------------------------------
-// Banner 3D murni CSS + React (tanpa library tambahan).
-// - Kubus utama berputar, ikon di tiap sisinya = menu situsmu
-// - Dua cincin orbit dengan kubus satelit
-// - Kubus melayang di kedalaman berbeda (efek parallax)
-// - Seluruh adegan miring mengikuti kursor / sentuhan
-// - Lantai grid yang bergerak ke arah penonton
-// ---------------------------------------------------------------
 
 const REST_TILT = 'rotateX(-8deg) rotateY(14deg)';
 const MAX_TILT_X = 14; // derajat
@@ -26,6 +19,96 @@ const SCENE_SIZE = 448; // ukuran dasar adegan (px) = 28rem, diskalakan otomatis
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
+/* ========================= LIVE VIEW ========================= */
+
+const API_ORIGIN = (
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_ORIGIN) ||
+  'https://api-mfikria.vercel.app'
+).replace(/\/+$/, '');
+
+const API_PATH = (
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TOKEN_PATH) ||
+  '/mfikria/v1'
+).replace(/\/+$/, '');
+
+const GUEST_VIEW_URL = `${API_ORIGIN}${API_PATH}/guest-view`; // -> { status: 'success', view: 18 }
+const POLL_MS = 60 * 1000; // perbarui tiap 1 menit (hemat request; backend + CDN juga cache 30 detik)
+
+// Ambil jumlah view. Berhenti saat tab tersembunyi, langsung segar saat tab dibuka lagi.
+function useGuestView() {
+  const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    let controller = null;
+
+    const load = async () => {
+      if (document.hidden) return;
+      if (controller) controller.abort();
+      controller = new AbortController();
+      try {
+        const res = await fetch(GUEST_VIEW_URL, { signal: controller.signal });
+        if (!res.ok) return;
+        const body = await res.json();
+        const n = Number(body && body.view);
+        if (alive && Number.isFinite(n)) setCount(n);
+      } catch (error) {
+        /* jaringan gagal / dibatalkan: pertahankan angka terakhir */
+      }
+    };
+
+    const onVisible = () => {
+      if (!document.hidden) load();
+    };
+
+    load();
+    const timer = setInterval(load, POLL_MS);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      if (controller) controller.abort();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+
+  return count;
+}
+
+function LiveViews() {
+  const count = useGuestView();
+
+  return (
+    <div
+      className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-4 py-1.5"
+      title="Jumlah pengunjung yang tercatat"
+      aria-live="polite"
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="b3d-anim absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+      </span>
+      <HiEye className="h-4 w-4 text-emerald-400" />
+      <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Live</span>
+      {count === null ? (
+        <span className="h-3 w-8 animate-pulse rounded bg-emerald-400/20" />
+      ) : (
+        <span
+          key={count}
+          className="b3d-anim text-xs font-bold tabular-nums text-white"
+          style={{ animation: 'b3d-pop 0.5s ease-out' }}
+        >
+          {count.toLocaleString('id-ID')}
+          <span className="ml-1 font-medium text-gray-400">pengunjung</span>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ========================= 3D ========================= */
+
 const CSS = `
 @keyframes b3d-spin   { from { transform: rotateX(-22deg) rotateY(0deg); } to { transform: rotateX(-22deg) rotateY(360deg); } }
 @keyframes b3d-tumble { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(360deg); } }
@@ -33,6 +116,7 @@ const CSS = `
 @keyframes b3d-float  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
 @keyframes b3d-shadow { 0%, 100% { transform: scale(1); opacity: .55; } 50% { transform: scale(.78); opacity: .3; } }
 @keyframes b3d-grid   { from { background-position: 0 0; } to { background-position: 0 56px; } }
+@keyframes b3d-pop    { 0% { transform: scale(1.35); color: #6ee7b7; } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .b3d-anim { animation: none !important; } }
 `;
 
@@ -259,11 +343,14 @@ export default function Banner3D() {
       <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-6 lg:grid-cols-2 lg:gap-10">
         {/* Teks */}
         <div className="order-2 text-center lg:order-1 lg:text-left">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-4 py-1.5">
-            <HiCube className="h-4 w-4 text-pink-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-pink-400">
-              Portofolio Interaktif 3D
-            </span>
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+            <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-4 py-1.5">
+              <HiCube className="h-4 w-4 text-pink-400" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-pink-400">
+                Portofolio Interaktif 3D
+              </span>
+            </div>
+            <LiveViews />
           </div>
 
           <h1 className="mb-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl lg:leading-[1.05]">

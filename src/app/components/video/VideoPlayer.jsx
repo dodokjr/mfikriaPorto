@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   IoPlay,
@@ -212,19 +211,11 @@ export default function VideoPlayer({ src, title = '', onError, onLoadedMetadata
     return Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
   };
 
-  // Saat menggeser: tampilan bar mengikuti jari/kursor langsung, tapi seek ke video
-  // dibatasi 1x per frame dan dilewati kalau seek sebelumnya belum selesai.
+  // Saat menggeser: hanya gambar posisi di bar dan waktu. Seek ke video dilakukan SEKALI
+  // di endDrag() saat pointer dilepas, supaya tidak ada puluhan request Range selama menggeser.
   const queueSeek = (pct) => {
     dragPct.current = pct;
-    if (seekRaf.current) return;
-    seekRaf.current = requestAnimationFrame(() => {
-      seekRaf.current = 0;
-      const v = videoRef.current;
-      if (!v || !v.duration || v.seeking) return;
-      const target = dragPct.current * v.duration;
-      if (typeof v.fastSeek === 'function') v.fastSeek(target);
-      else v.currentTime = target;
-    });
+    paint();
   };
 
   const paintHover = () => {
@@ -347,7 +338,7 @@ export default function VideoPlayer({ src, title = '', onError, onLoadedMetadata
         src={src}
         autoPlay
         playsInline
-        preload="auto"
+        preload="metadata"
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture
         disableRemotePlayback

@@ -13,7 +13,7 @@ export default function BlogParams() {
     
     const fetchData = async () => {
         try {
-            const api = await fetch(`https://api-mfikria.vercel.app/mfikria/c/blog/${id}`)
+            const api = await fetch(`https://api-mfikria.vercel.app/v1/blog/post/${id}`)
             const data = await api.json()
             setRes(data.data)
         } catch (error) {

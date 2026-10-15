@@ -13,7 +13,7 @@ export default function Blog() {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const api = await fetch("https://api-mfikria.vercel.app/mfikria/c/blog")
+      const api = await fetch("https://api-mfikria.vercel.app/v1/blog")
       const res = await api.json()
       setData(res)
     } catch (error) {
@@ -51,7 +51,7 @@ export default function Blog() {
       <header className="border-b border-gray-800/40 py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            
+
             {/* Judul & Deskripsi */}
             <div className="max-w-2xl">
               <span className="text-xs font-semibold tracking-wider text-pink-500 uppercase">

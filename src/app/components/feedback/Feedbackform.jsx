@@ -1,26 +1,49 @@
 // Simpan di: src/app/components/feedback/FeedbackForm.jsx
 // Form kirim saran & kritik. onSubmitted(data) dipanggil dengan komentar yang tersimpan.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { HiPaperAirplane, HiCheckCircle, HiRefresh } from 'react-icons/hi';
 import StarPicker from './Starpicker';
+import HumanCheck from '../utilities/Humancheck';
 import { postFeedback } from '../../../libs/Feedbackapi';
 import { MAX_MESSAGE, MAX_NAME, MIN_MESSAGE, TYPES } from '../../../libs/Feedbackconfig';
 
+const MIN_FILL_MS = 3000; // form yang dikirim lebih cepat dari ini dianggap bot
+
 export default function FeedbackForm({ onSubmitted }) {
+  const humanRef = useRef(null);
+  const mountedAt = useRef(Date.now());
+
   const [nama, setNama] = useState('');
   const [tipe, setTipe] = useState('saran');
   const [rating, setRating] = useState(0);
   const [pesan, setPesan] = useState('');
   const [website, setWebsite] = useState(''); // honeypot: harus tetap kosong
+  const [human, setHuman] = useState(false); // sudah lolos captcha
+  const [captchaError, setCaptchaError] = useState('');
   const [send, setSend] = useState({ state: 'idle', message: '' }); // idle | sending | success | error
 
   const messageLength = pesan.trim().length;
   const canSubmit = messageLength >= MIN_MESSAGE && messageLength <= MAX_MESSAGE && send.state !== 'sending';
 
+  const resetCaptcha = () => {
+    humanRef.current?.reset();
+    setHuman(false);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!canSubmit) return;
+
+    if (!human) {
+      setCaptchaError('Silakan centang "Saya bukan robot" terlebih dahulu');
+      return;
+    }
+
+    if (Date.now() - mountedAt.current < MIN_FILL_MS) {
+      setSend({ state: 'error', message: 'Terlalu cepat. Mohon tunggu beberapa detik lalu coba lagi.' });
+      return;
+    }
 
     setSend({ state: 'sending', message: '' });
     try {
@@ -43,11 +66,13 @@ export default function FeedbackForm({ onSubmitted }) {
     } catch (error) {
       console.error('Kirim saran & kritik gagal:', error);
       setSend({ state: 'error', message: 'Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.' });
+    } finally {
+      resetCaptcha(); // verifikasi hanya berlaku untuk satu kali kirim
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-800 bg-gray-900/60 p-5" noValidate>
+    <form onSubmit={handleSubmit} className="relative rounded-2xl border border-gray-800 bg-gray-900/60 p-5" noValidate>
       <h2 className="text-lg font-bold">Kirim masukan</h2>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -129,6 +154,19 @@ export default function FeedbackForm({ onSubmitted }) {
           autoComplete="off"
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
+        />
+      </div>
+
+      {/* Captcha "Saya bukan robot" */}
+      <div className="mt-4">
+        <HumanCheck
+          ref={humanRef}
+          verified={human}
+          error={captchaError}
+          onVerify={() => {
+            setHuman(true);
+            setCaptchaError('');
+          }}
         />
       </div>
 

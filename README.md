@@ -60,7 +60,7 @@ Website pribadi untuk memamerkan hobi, dengan **pemutar musik** interaktif sebag
 
 ```bash
 # 1. Clone repositori
-git clone https://github.com/<username>/<nama-repo>.git
+git clone https://github.com/dodokjr/mfikriaPorto.git
 cd <nama-repo>
 
 # 2. Pasang dependensi
@@ -76,7 +76,7 @@ Buka `http://localhost:5173` di browser.
 
 | Perintah | Fungsi |
 | --- | --- |
-| `npm run dev` | Menjalankan server pengembangan dengan HMR |
+| `npm start` | Menjalankan server pengembangan dengan HMR |
 | `npm run build` | Membuat build produksi ke folder `dist/` |
 | `npm run preview` | Melihat hasil build produksi secara lokal |
 | `npm run lint` | Memeriksa kode dengan ESLint |

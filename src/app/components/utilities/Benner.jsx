@@ -1,403 +1,287 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { HiArrowRight, HiMail } from 'react-icons/hi';
 import {
-  HiCode,
-  HiSparkles,
-  HiHeart,
-  HiFolder,
-  HiNewspaper,
-  HiShoppingBag,
-  HiArrowRight,
-  HiCube,
-  HiEye,
-} from 'react-icons/hi';
+  FaJava,
+  FaGithub,
+  FaInstagram,
+  FaYoutube,
+  FaLinkedin,
+  FaSteam,
+  FaDiscord,
+} from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+import {
+  SiTypescript,
+  SiJavascript,
+  SiGo,
+  SiPython,
+  SiC,
+  SiCplusplus,
+  SiReact,
+} from 'react-icons/si';
 
+/* ========================= DATA ========================= */
 
-const REST_TILT = 'rotateX(-8deg) rotateY(14deg)';
-const MAX_TILT_X = 14; // derajat
-const MAX_TILT_Y = 20; // derajat
-const SCENE_SIZE = 448; // ukuran dasar adegan (px) = 28rem, diskalakan otomatis sesuai lebar layar
+// Ganti sesuai data kamu
+const NAME = 'M. Fikri Ardiyansah';
+const ROLES = ['Frontend Developer', 'Backend Developer', 'UI Builder', "Gamers", "Photografer",];
 
-const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+const LANGS = [
+  { name: 'TypeScript', Icon: SiTypescript, color: '#3178C6' },
+  { name: 'JavaScript', Icon: SiJavascript, color: '#F7DF1E' },
+  { name: 'Go', Icon: SiGo, color: '#00ADD8' },
+  { name: 'Python', Icon: SiPython, color: '#FFD43B' },
+  { name: 'Java', Icon: FaJava, color: '#ED8B00' },
+  { name: 'C', Icon: SiC, color: '#A8B9CC' },
+  { name: 'C++', Icon: SiCplusplus, color: '#659AD2' },
+];
 
-/* ========================= LIVE VIEW ========================= */
+// Banner selalu gelap, jadi cukup satu set warna hover
+const SOCIALS = [
+  { key: 'github', label: 'GitHub', Icon: FaGithub, hover: 'hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' },
+  { key: 'instagram', label: 'Instagram', Icon: FaInstagram, hover: 'hover:text-[#E4405F] hover:drop-shadow-[0_0_8px_rgba(228,64,95,0.6)]' },
+  { key: 'youtube', label: 'YouTube', Icon: FaYoutube, hover: 'hover:text-[#FF0000] hover:drop-shadow-[0_0_8px_rgba(255,0,0,0.55)]' },
+  { key: 'linkedin', label: 'LinkedIn', Icon: FaLinkedin, hover: 'hover:text-[#0A66C2] hover:drop-shadow-[0_0_8px_rgba(10,102,194,0.6)]' },
+  { key: 'discord', label: 'Discord', Icon: FaDiscord, hover: 'hover:text-[#5865F2] hover:drop-shadow-[0_0_8px_rgba(88,101,242,0.6)]' },
+  { key: 'steam', label: 'Steam', Icon: FaSteam, hover: 'hover:text-[#66C0F4] hover:drop-shadow-[0_0_8px_rgba(102,192,244,0.6)]' },
+  { key: 'twitter', label: 'X (Twitter)', Icon: FaXTwitter, hover: 'hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' },
+];
 
-const API_ORIGIN = (
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_ORIGIN) ||
-  'https://api-mfikria.vercel.app'
-).replace(/\/+$/, '');
+const ORBIT_SECONDS = 36;
+const RADIUS = 42; // persen dari lebar kotak orbit
 
-const API_PATH = (
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_TOKEN_PATH) ||
-  '/mfikria/v1'
-).replace(/\/+$/, '');
+const CSS = `
+@keyframes fe-orbit   { to { transform: rotate(360deg); } }
+@keyframes fe-counter { to { transform: rotate(-360deg); } }
+@keyframes fe-blink   { 50% { opacity: 0; } }
+@keyframes fe-rise    { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fe-pulse   { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .9; transform: scale(1.06); } }
+.fe-orbit:hover, .fe-orbit:hover .fe-counter { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .fe-anim { animation: none !important; } }
+`;
 
-const GUEST_VIEW_URL = `${API_ORIGIN}${API_PATH}/guest-view`; // -> { status: 'success', view: 18 }
-const POLL_MS = 60 * 1000; // perbarui tiap 1 menit (hemat request; backend + CDN juga cache 30 detik)
+/* ========================= HOOK ========================= */
 
-// Ambil jumlah view. Berhenti saat tab tersembunyi, langsung segar saat tab dibuka lagi.
-function useGuestView() {
-  const [count, setCount] = useState(null);
+// Efek mengetik untuk peran. Jika pengguna memilih reduced motion, teks tidak bergerak.
+function useTypewriter(words, { type = 70, erase = 40, hold = 1600 } = {}) {
+  const [text, setText] = useState(words[0]);
 
   useEffect(() => {
-    let alive = true;
-    let controller = null;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
 
-    const load = async () => {
-      if (document.hidden) return;
-      if (controller) controller.abort();
-      controller = new AbortController();
-      try {
-        const res = await fetch(GUEST_VIEW_URL, { signal: controller.signal });
-        if (!res.ok) return;
-        const body = await res.json();
-        const n = Number(body && body.view);
-        if (alive && Number.isFinite(n)) setCount(n);
-      } catch (error) {
-        /* jaringan gagal / dibatalkan: pertahankan angka terakhir */
+    let i = 0;
+    let n = words[0].length;
+    let deleting = true;
+    let timer;
+
+    const tick = () => {
+      const word = words[i];
+      if (deleting) {
+        n -= 1;
+        setText(word.slice(0, n));
+        if (n === 0) {
+          deleting = false;
+          i = (i + 1) % words.length;
+        }
+        timer = setTimeout(tick, erase);
+      } else {
+        const next = words[i];
+        n += 1;
+        setText(next.slice(0, n));
+        if (n === next.length) {
+          deleting = true;
+          timer = setTimeout(tick, hold);
+        } else {
+          timer = setTimeout(tick, type);
+        }
       }
     };
 
-    const onVisible = () => {
-      if (!document.hidden) load();
-    };
+    timer = setTimeout(tick, hold);
+    return () => clearTimeout(timer);
+  }, [words, type, erase, hold]);
 
-    load();
-    const timer = setInterval(load, POLL_MS);
-    document.addEventListener('visibilitychange', onVisible);
-
-    return () => {
-      alive = false;
-      clearInterval(timer);
-      if (controller) controller.abort();
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
-
-  return count;
+  return text;
 }
 
-function LiveViews() {
-  const count = useGuestView();
+/* ========================= ORBIT ========================= */
 
+function LanguageOrbit() {
   return (
     <div
-      className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-4 py-1.5"
-      title="Jumlah pengunjung yang tercatat"
-      aria-live="polite"
+      className="relative mx-auto aspect-square w-full max-w-[26rem]"
+      role="img"
+      aria-label={`Bahasa pemrograman: ${LANGS.map((l) => l.name).join(', ')}`}
     >
-      <span className="relative flex h-2 w-2">
-        <span className="b3d-anim absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-      </span>
-      <HiEye className="h-4 w-4 text-emerald-400" />
-      <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Live</span>
-      {count === null ? (
-        <span className="h-3 w-8 animate-pulse rounded bg-emerald-400/20" />
-      ) : (
-        <span
-          key={count}
-          className="b3d-anim text-xs font-bold tabular-nums text-white"
-          style={{ animation: 'b3d-pop 0.5s ease-out' }}
-        >
-          {count.toLocaleString('id-ID')}
-          <span className="ml-1 font-medium text-gray-400">pengunjung</span>
-        </span>
-      )}
-    </div>
-  );
-}
+      {/* Cahaya latar */}
+      <div className="fe-anim absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(236,72,153,0.35),transparent_65%)] [animation:fe-pulse_5s_ease-in-out_infinite]" />
 
-/* ========================= 3D ========================= */
-
-const CSS = `
-@keyframes b3d-spin   { from { transform: rotateX(-22deg) rotateY(0deg); } to { transform: rotateX(-22deg) rotateY(360deg); } }
-@keyframes b3d-tumble { from { transform: rotateX(0deg) rotateY(0deg); } to { transform: rotateX(360deg) rotateY(360deg); } }
-@keyframes b3d-roll   { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes b3d-float  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
-@keyframes b3d-shadow { 0%, 100% { transform: scale(1); opacity: .55; } 50% { transform: scale(.78); opacity: .3; } }
-@keyframes b3d-grid   { from { background-position: 0 0; } to { background-position: 0 56px; } }
-@keyframes b3d-pop    { 0% { transform: scale(1.35); color: #6ee7b7; } 100% { transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) { .b3d-anim { animation: none !important; } }
-`;
-
-// Posisi tiap sisi kubus (depan, belakang, kanan, kiri, atas, bawah)
-const FACE_TRANSFORMS = [
-  'rotateY(0deg)',
-  'rotateY(180deg)',
-  'rotateY(90deg)',
-  'rotateY(-90deg)',
-  'rotateX(90deg)',
-  'rotateX(-90deg)',
-].map((t) => `${t} translateZ(calc(var(--s) / 2))`);
-
-const TONES = {
-  pink: 'border-pink-300/40 bg-gradient-to-br from-pink-500/70 to-fuchsia-700/70',
-  indigo: 'border-indigo-300/40 bg-gradient-to-br from-indigo-400/70 to-indigo-800/70',
-  glass: 'border-pink-400/50 bg-pink-500/10',
-};
-
-function Cube({ size, tone = 'pink', icons, animation }) {
-  return (
-    <div
-      className="b3d-anim relative [transform-style:preserve-3d]"
-      style={{ width: size, height: size, '--s': `${size}px`, animation }}
-    >
-      {FACE_TRANSFORMS.map((transform, i) => {
-        const Icon = icons?.[i];
-        return (
-          <div
-            key={i}
-            className={`absolute inset-0 flex items-center justify-center border ${TONES[tone]}`}
-            style={{ transform }}
-          >
-            {Icon && <Icon className="h-1/3 w-1/3 text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// Kubus kecil yang melayang di berbagai kedalaman
-const FLOATERS = [
-  { size: 44, left: '6%', top: '14%', z: 90, tone: 'indigo', spin: 'b3d-tumble 11s linear infinite', float: 'b3d-float 6s ease-in-out infinite' },
-  { size: 30, left: '84%', top: '16%', z: 130, tone: 'pink', spin: 'b3d-tumble 8s linear infinite reverse', float: 'b3d-float 5s ease-in-out -1.5s infinite' },
-  { size: 58, left: '86%', top: '64%', z: 60, tone: 'glass', spin: 'b3d-tumble 16s linear infinite', float: 'b3d-float 7s ease-in-out -3s infinite' },
-  { size: 26, left: '10%', top: '74%', z: 150, tone: 'pink', spin: 'b3d-tumble 9s linear infinite', float: 'b3d-float 5.5s ease-in-out -2s infinite' },
-  { size: 36, left: '48%', top: '2%', z: -90, tone: 'glass', spin: 'b3d-tumble 13s linear infinite reverse', float: 'b3d-float 6.5s ease-in-out -4s infinite' },
-];
-
-function Ring({ size, tilt, dashed, duration, reverse, tone = 'pink' }) {
-  return (
-    <div
-      className="absolute left-1/2 top-1/2 [transform-style:preserve-3d]"
-      style={{
-        width: size,
-        height: size,
-        marginLeft: -size / 2,
-        marginTop: -size / 2,
-        transform: tilt,
-      }}
-    >
+      {/* Garis lintasan */}
       <div
-        className={`b3d-anim absolute inset-0 rounded-full border-2 [transform-style:preserve-3d] ${
-          dashed ? 'border-dashed border-indigo-400/50' : 'border-pink-400/50'
-        } shadow-[0_0_24px_rgba(236,72,153,0.25)]`}
-        style={{ animation: `b3d-roll ${duration}s linear infinite ${reverse ? 'reverse' : ''}` }}
-      >
-        {/* Kubus satelit yang mengorbit di sepanjang cincin */}
-        <div className="absolute left-1/2 top-0 -ml-2 -mt-2 [transform-style:preserve-3d]">
-          <Cube size={16} tone={tone} animation="b3d-tumble 4s linear infinite" />
+        className="absolute rounded-full border border-dashed border-pink-400/30"
+        style={{ inset: `${50 - RADIUS}%` }}
+      />
+      <div className="absolute inset-[22%] rounded-full border border-indigo-400/20" />
+
+      {/* Kartu tengah */}
+      <div className="absolute left-1/2 top-1/2 w-[46%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/10 bg-gray-900/80 shadow-2xl shadow-pink-600/20 backdrop-blur">
+        <div className="flex items-center gap-1.5 border-b border-white/5 px-3 py-2">
+          <span className="h-2 w-2 rounded-full bg-pink-500/80" />
+          <span className="h-2 w-2 rounded-full bg-indigo-400/80" />
+          <span className="h-2 w-2 rounded-full bg-gray-600" />
+        </div>
+        <pre className="m-0 px-3 py-3 font-mono text-[10px] leading-relaxed text-gray-300 sm:text-[11px]">
+          <span className="text-indigo-300">const</span> <span className="text-pink-300">dev</span> = {'{'}
+          {'\n'}  role: <span className="text-emerald-300">'frontend'</span>,
+          {'\n'}  loves: <span className="text-emerald-300">'UI'</span>,
+          {'\n'}{'}'}
+        </pre>
+        <div className="flex items-center gap-2 border-t border-white/5 px-3 py-2 text-[10px] text-gray-400">
+          <SiReact className="h-3.5 w-3.5 text-sky-400" />
+          Dibangun dengan React
         </div>
       </div>
-    </div>
-  );
-}
 
-function Scene() {
-  const tiltRef = useRef(null);
-
-  useEffect(() => {
-    const layer = tiltRef.current;
-    if (!layer) return undefined;
-    layer.style.transform = REST_TILT;
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
-
-    // Dengarkan di level jendela supaya adegan tetap bereaksi walau kursor
-    // ada di bagian teks.
-    const onMove = (e) => {
-      const nx = clamp((e.clientX / window.innerWidth) * 2 - 1, -1, 1);
-      const ny = clamp((e.clientY / window.innerHeight) * 2 - 1, -1, 1);
-      layer.style.transform = `rotateX(${-ny * MAX_TILT_X}deg) rotateY(${nx * MAX_TILT_Y}deg)`;
-    };
-    const onLeave = () => {
-      layer.style.transform = REST_TILT;
-    };
-
-    window.addEventListener('pointermove', onMove, { passive: true });
-    document.documentElement.addEventListener('pointerleave', onLeave);
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      document.documentElement.removeEventListener('pointerleave', onLeave);
-    };
-  }, []);
-
-  // Skala adegan mengikuti lebar kolom yang tersedia (HP, tablet, desktop)
-  const wrapRef = useRef(null);
-  const [scale, setScale] = useState(0.7);
-
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return undefined;
-
-    const fit = () => setScale(clamp(wrap.clientWidth / SCENE_SIZE, 0.4, 1));
-    fit();
-
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', fit);
-      return () => window.removeEventListener('resize', fit);
-    }
-    const ro = new ResizeObserver(fit);
-    ro.observe(wrap);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={wrapRef}
-      aria-hidden="true"
-      className="relative order-1 w-full lg:order-2"
-      style={{ height: SCENE_SIZE * scale }}
-    >
+      {/* Ikon bahasa yang mengorbit */}
       <div
-        className="absolute left-1/2 top-0 select-none [perspective:1100px]"
-        style={{
-          width: SCENE_SIZE,
-          height: SCENE_SIZE,
-          transform: `translateX(-50%) scale(${scale})`,
-          transformOrigin: 'top center',
-        }}
+        className="fe-anim fe-orbit absolute inset-0"
+        style={{ animation: `fe-orbit ${ORBIT_SECONDS}s linear infinite` }}
       >
-        {/* Cahaya di belakang adegan */}
-        <div className="absolute -inset-10 bg-[radial-gradient(circle,rgba(236,72,153,0.3),transparent_62%)]" />
-
-        {/* Bayangan di lantai */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-          <div
-            className="b3d-anim h-8 w-56 rounded-[50%] bg-pink-500/40 blur-xl"
-            style={{ animation: 'b3d-shadow 6s ease-in-out infinite' }}
-          />
-        </div>
-
-        {/* Lapisan yang miring mengikuti kursor */}
-        <div
-          ref={tiltRef}
-          className="absolute inset-0 transition-transform duration-300 ease-out will-change-transform [transform-style:preserve-3d]"
-        >
-          {/* Inti bercahaya (selalu menghadap layar) */}
-          <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,#fff,rgba(244,114,182,0.85)_35%,transparent_70%)] blur-[2px]" />
-
-          {/* Kubus utama: ikon tiap sisi = menu situs */}
-          <div className="absolute inset-0 flex items-center justify-center [transform-style:preserve-3d]">
-            <Cube
-              size={150}
-              tone="pink"
-              icons={[HiCode, HiSparkles, HiFolder, HiHeart, HiNewspaper, HiShoppingBag]}
-              animation="b3d-spin 16s linear infinite"
-            />
-          </div>
-
-          {/* Cincin orbit */}
-          <Ring size={300} tilt="rotateX(72deg) rotateY(-12deg)" duration={14} />
-          <Ring size={390} tilt="rotateX(66deg) rotateY(20deg)" duration={22} reverse dashed tone="indigo" />
-
-          {/* Kubus-kubus melayang */}
-          {FLOATERS.map((f, i) => (
+        {LANGS.map(({ name, Icon, color }, i) => {
+          const angle = (i / LANGS.length) * Math.PI * 2 - Math.PI / 2;
+          const left = 50 + RADIUS * Math.cos(angle);
+          const top = 50 + RADIUS * Math.sin(angle);
+          return (
             <div
-              key={i}
-              className="absolute [transform-style:preserve-3d]"
-              style={{ left: f.left, top: f.top, transform: `translateZ(${f.z}px)` }}
+              key={name}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${left}%`, top: `${top}%` }}
             >
+              {/* Putar balik supaya ikon tetap tegak */}
               <div
-                className="b3d-anim [transform-style:preserve-3d]"
-                style={{ animation: f.float }}
+                className="fe-anim fe-counter group relative"
+                style={{ animation: `fe-counter ${ORBIT_SECONDS}s linear infinite` }}
               >
-                <Cube size={f.size} tone={f.tone} animation={f.spin} />
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gray-900/90 shadow-lg transition-transform duration-200 hover:scale-110 sm:h-14 sm:w-14"
+                  style={{ boxShadow: `0 0 22px ${color}33` }}
+                  title={name}
+                >
+                  <Icon className="h-5 w-5 sm:h-7 sm:w-7" style={{ color }} />
+                </div>
+                <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-0.5 text-[10px] font-medium text-gray-200 opacity-0 transition-opacity group-hover:opacity-100">
+                  {name}
+                </span>
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-export default function Banner3D() {
+/* ========================= BANNER ========================= */
+
+// data: objek yang sama dengan yang dipakai Home (data.data.media_sosial)
+export default function BannerFrontend({ data }) {
+  const role = useTypewriter(ROLES);
+  const sosial = (data && data.data && data.data.media_sosial) || {};
+
   return (
-    <section className="relative -mt-36 flex min-h-screen items-center overflow-hidden border-b border-gray-900/60 bg-gray-950 py-12 pl-[4.5rem] pr-4 sm:py-16 sm:pl-24 sm:pr-8 xl:px-8">
+    // mt-* memberi jarak dari atas layar. Hapus -mt-36 dari versi lama.
+    <section className="relative mx-3 mb-6 mt-6 overflow-hidden rounded-3xl border border-gray-800/80 bg-gray-950 py-12 pl-[4.5rem] pr-4 sm:mx-4 sm:mt-8 sm:py-16 sm:pl-24 sm:pr-8 xl:mx-6 xl:px-10">
       <style>{CSS}</style>
 
-      {/* Latar: cahaya warna */}
+      {/* Latar */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(236,72,153,0.18),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(99,102,241,0.16),transparent_55%)]" />
-      </div>
-
-      {/* Lantai grid perspektif yang bergerak ke arah penonton */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 overflow-hidden [mask-image:linear-gradient(to_top,black_25%,transparent)]"
-      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(99,102,241,0.18),transparent_55%)]" />
         <div
-          className="b3d-anim absolute -inset-x-1/2 bottom-0 h-[200%] origin-bottom [transform:perspective(420px)_rotateX(62deg)]"
+          className="absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(236,72,153,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(236,72,153,0.3) 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
-            animation: 'b3d-grid 3s linear infinite',
+              'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
           }}
         />
       </div>
 
-      <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-6 lg:grid-cols-2 lg:gap-10">
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
         {/* Teks */}
-        <div className="order-2 text-center lg:order-1 lg:text-left">
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-            <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-4 py-1.5">
-              <HiCube className="h-4 w-4 text-pink-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-pink-400">
-                Portofolio Interaktif 3D
-              </span>
-            </div>
-            <LiveViews />
-          </div>
+        <div className="fe-anim order-2 text-center [animation:fe-rise_0.7s_ease-out_both] lg:order-1 lg:text-left">
+          <p className="mb-3 text-sm font-medium text-pink-400 sm:text-base">Halo, saya {NAME}</p>
 
-          <h1 className="mb-5 text-3xl font-black leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl lg:leading-[1.05]">
-            Jelajahi Dunia
+          <h1 className="mb-3 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Saya membangun
             <br />
-            Dalam{' '}
-            <span className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-indigo-500 bg-clip-text text-transparent">
-              Tiga Dimensi
-            </span>
+            antarmuka web
           </h1>
 
+          <p className="mb-5 h-9 text-xl font-bold sm:text-2xl lg:h-10 lg:text-3xl">
+            <span className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-indigo-400 bg-clip-text text-transparent">
+              {role}
+            </span>
+            <span className="fe-anim ml-0.5 inline-block h-[0.9em] w-[3px] translate-y-[0.12em] bg-pink-400 [animation:fe-blink_1s_steps(1)_infinite]" />
+          </p>
+
           <p className="mx-auto mb-8 max-w-lg text-sm leading-relaxed text-gray-400 sm:text-base lg:mx-0">
-            Gerakkan kursor atau jarimu di sekitar kubus. Setiap sisinya mewakili bagian dari duniaku:
-            project, tulisan, hobi, sampai toko. Seluruh adegan ini dibuat murni dengan CSS 3D dan
-            React.
+            Saya mengubah desain menjadi halaman yang cepat, rapi, dan nyaman dipakai di HP maupun
+            desktop. Sehari-hari saya menulis React dan Tailwind, dan saya juga mengerti sisi
+            belakangnya lewat Go, Python, Java, C, dan C++.
           </p>
 
           <div className="mb-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
             <a
               href="/project"
-              className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-600/25 transition-all hover:bg-pink-500 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-pink-600/25 transition-all hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400 active:scale-95"
             >
-              Lihat Project
+              Lihat project
               <HiArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="/hobbies"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-800 bg-gray-900/70 px-5 py-3 text-sm font-bold text-gray-200 transition-all hover:border-pink-500/50 hover:text-white active:scale-95"
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-900/70 px-5 py-3 text-sm font-bold text-gray-200 transition-all hover:border-pink-500/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400 active:scale-95"
             >
-              My Hobbies
+              <HiMail className="h-4 w-4" />
+              Hubungi saya
             </a>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-            {['React', 'Tailwind CSS', 'CSS 3D Transform'].map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-gray-800 bg-gray-900/60 px-3 py-1 text-[11px] font-medium text-gray-400"
+          {/* Deret ikon bahasa (terlihat jelas di HP juga) */}
+          <ul className="flex flex-wrap items-center justify-center gap-2 lg:justify-start" aria-label="Bahasa pemrograman">
+            {LANGS.map(({ name, Icon, color }) => (
+              <li
+                key={name}
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-800 bg-gray-900/60 px-3 py-1 text-[11px] font-medium text-gray-300"
               >
-                {t}
-              </span>
+                <Icon className="h-3.5 w-3.5" style={{ color }} />
+                {name}
+              </li>
+            ))}
+          </ul>
+
+          {/* Media sosial: warna logo muncul saat hover */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-1 text-gray-400 lg:justify-start">
+            {SOCIALS.filter(({ key }) => sosial[key]).map(({ key, label, Icon, hover }) => (
+              <a
+                key={key}
+                href={sosial[key]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
+                className={`grid h-10 w-10 place-items-center rounded-lg outline-none transition-all duration-200 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-pink-500/60 active:translate-y-0 ${hover}`}
+              >
+                <Icon size={22} />
+              </a>
             ))}
           </div>
         </div>
 
-        {/* Adegan 3D: di HP tampil di atas teks, di desktop di sebelah kanan */}
-        <Scene />
+        {/* Orbit: di HP tampil di atas teks, di desktop di kanan */}
+        <div className="order-1 lg:order-2">
+          <LanguageOrbit />
+        </div>
       </div>
     </section>
   );

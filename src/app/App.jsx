@@ -107,7 +107,7 @@ function App() {
         </div>
 
         {/* Hero Banner Minimalis / Pengganti Diff Lama */}
-        <Benner />
+        <Benner data={data} />
 
         {/* Komponen Konten Utama */}
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-16">

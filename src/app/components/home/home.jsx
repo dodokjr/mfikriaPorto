@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { HiEye } from 'react-icons/hi';
+import { FaJava } from 'react-icons/fa';
 import {
   SiC,
   SiCplusplus,
@@ -21,6 +22,7 @@ const LANGS = [
   { name: 'JavaScript', level: 88, Icon: SiJavascript, color: '#F7DF1E', projects: [] },
   { name: 'TypeScript', level: 75, Icon: SiTypescript, color: '#3178C6', projects: [] },
   { name: 'Python', level: 69, Icon: SiPython, color: '#FFD43B', projects: [] },
+  { name: 'Java', level: 60, Icon: FaJava, color: '#ED8B00', projects: [] }, // ganti level sesuai penguasaanmu
   { name: 'Go', level: 54, Icon: SiGo, color: '#00ADD8', projects: [] },
   { name: 'C', level: 35, Icon: SiC, color: '#A8B9CC', projects: [] },
 ];

@@ -32,6 +32,7 @@ const Footer = () => {
             <a href="/Project" className="hover:text-white transition-colors">Projects</a>
             <a href="/blog" className="hover:text-white transition-colors">Blog</a>
             <a href="/hobbies" className="hover:text-white transition-colors">Hobbies</a>
+            <a href="/video" className="hover:text-white transition-colors">Video</a>
             <a href="/store" className="hover:text-white transition-colors">Store</a>
           </div>
 

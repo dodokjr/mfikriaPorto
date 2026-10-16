@@ -74,7 +74,7 @@ function Card({ item, alignRight }) {
     >
       <span
         aria-hidden="true"
-        className={`absolute top-[28px] hidden h-px w-10 bg-pink-500/40 md:block ${
+        className={`absolute top-[28px] hidden h-px w-10 bg-pink-500/50 md:block ${
           alignRight ? 'right-0' : 'left-0'
         }`}
       />
@@ -84,28 +84,28 @@ function Card({ item, alignRight }) {
           alignRight ? 'md:text-right' : ''
         } ${
           item.current
-            ? 'border-pink-500/50 bg-pink-500/[0.08] shadow-[0_0_48px_-14px_rgba(236,72,153,0.65)]'
-            : 'border-white/10 bg-neutral-900/70 hover:border-pink-500/40'
+            ? 'border-pink-500/60 bg-pink-500/10 shadow-[0_0_48px_-14px_rgba(236,72,153,0.7)]'
+            : 'border-pink-500/20 bg-black hover:border-pink-500/60 hover:shadow-[0_0_32px_-16px_rgba(236,72,153,0.7)]'
         }`}
       >
         <div className={`flex items-center gap-2 ${alignRight ? 'md:justify-end' : ''}`}>
-          <time className="font-mono text-xs text-pink-300">{item.year}</time>
+          <time className="font-mono text-xs text-pink-400">{item.year}</time>
           {item.current && (
-            <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-semibold text-white">
+            <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-semibold text-black">
               Saat ini
             </span>
           )}
         </div>
 
         <h3 className="mt-2 text-lg font-semibold tracking-tight text-white">{item.title}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-zinc-400">{item.description}</p>
+        <p className="mt-1 text-sm leading-relaxed text-pink-100/60">{item.description}</p>
 
         {item.tags?.length > 0 && (
           <ul className={`mt-4 flex flex-wrap gap-2 ${alignRight ? 'md:justify-end' : ''}`}>
             {item.tags.map((tag) => (
               <li
                 key={tag}
-                className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-zinc-300"
+                className="rounded-md border border-pink-500/30 bg-pink-500/10 px-2 py-1 text-xs text-pink-200"
               >
                 {tag}
               </li>
@@ -164,34 +164,52 @@ export default function TimeLine() {
 
   return (
     <section
-      className="flex justify-center overflow-x-clip bg-black px-4 pb-48 pt-10"
-      aria-label="Perjalanan karier"
+      className="relative flex flex-col items-center overflow-x-clip bg-black px-4 pb-48 pt-16"
+      aria-labelledby="timeline-title"
     >
+      {/* Cahaya pink halus di latar hitam */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.16),transparent_70%)]"
+      />
+
+      <header className="relative mb-14 text-center">
+        <h2
+          id="timeline-title"
+          className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl"
+        >
+          <span className="bg-gradient-to-r from-pink-300 via-pink-500 to-fuchsia-600 bg-clip-text text-transparent">
+            Pengalaman Saya
+          </span>
+        </h2>
+        <span
+          aria-hidden="true"
+          className="mx-auto mt-4 block h-[3px] w-16 rounded-full bg-pink-500 shadow-[0_0_12px_2px_rgba(236,72,153,0.6)]"
+        />
+      </header>
+
       <ol className="relative w-full max-w-4xl [perspective:1200px]">
         {/* Garis tunggal, lurus, menyambung dari atas sampai bawah */}
         <span
           aria-hidden="true"
           className="absolute bottom-0 left-2.5 top-5 w-[2px] -translate-x-1/2 rounded-full shadow-[0_0_10px_rgba(236,72,153,0.4)] [-webkit-mask-image:linear-gradient(to_bottom,#000_80%,transparent)] [mask-image:linear-gradient(to_bottom,#000_80%,transparent)] md:left-1/2"
           style={{
-            background:
-              'linear-gradient(to right, #f9a8d4 0%, #ec4899 50%, #9d174d 100%)',
+            background: 'linear-gradient(to right, #f9a8d4 0%, #ec4899 50%, #9d174d 100%)',
           }}
         />
 
-        {TIMELINE_DATA.map((item, index) => {
-          return (
-            <li
-              key={item.id}
-              ref={(el) => {
-                itemRefs.current[index] = el;
-              }}
-              className="relative pb-8 pl-10 will-change-transform md:grid md:grid-cols-2 md:pl-0"
-            >
-              <Marker current={item.current} />
-              <Card item={item} alignRight={index % 2 === 0} />
-            </li>
-          );
-        })}
+        {TIMELINE_DATA.map((item, index) => (
+          <li
+            key={item.id}
+            ref={(el) => {
+              itemRefs.current[index] = el;
+            }}
+            className="relative pb-8 pl-10 will-change-transform md:grid md:grid-cols-2 md:pl-0"
+          >
+            <Marker current={item.current} />
+            <Card item={item} alignRight={index % 2 === 0} />
+          </li>
+        ))}
       </ol>
     </section>
   );

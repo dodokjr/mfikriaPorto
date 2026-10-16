@@ -21,6 +21,37 @@ const nav = {
 const EDGE_GAP = 8;        // jarak minimal sidebar dari tepi layar
 const DRAG_THRESHOLD = 5;  // gerakan minimal (px) supaya dianggap drag, bukan klik
 
+// Samakan format path: huruf kecil, tanpa slash di akhir ("/Project/" -> "/project")
+const normalize = (p) => {
+  const s = (p || '/').toLowerCase().replace(/\/+$/, '');
+  return s === '' ? '/' : s;
+};
+
+// Menu aktif jika path sama persis atau berada di bawahnya (/blog/judul-post -> Blog).
+// "/" dianggap Home karena Home ada di /app.
+const isActivePath = (current, url) => {
+  const c = normalize(current);
+  const u = normalize(url);
+  if (u === '/app' && c === '/') return true;
+  return c === u || c.startsWith(`${u}/`);
+};
+
+// Path halaman saat ini, ikut berubah saat tombol back/forward ditekan
+function usePathname() {
+  const [path, setPath] = useState(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+
+  useEffect(() => {
+    const sync = () => setPath(window.location.pathname);
+    sync();
+    window.addEventListener('popstate', sync);
+    return () => window.removeEventListener('popstate', sync);
+  }, []);
+
+  return path;
+}
+
 function Divider({ vertical }) {
   return (
     <div
@@ -33,6 +64,7 @@ function Divider({ vertical }) {
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);      // false = vertikal, true = horizontal
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const pathname = usePathname();
 
   const sidebarRef = useRef(null);
   const posRef = useRef({ x: 0, y: 0 });
@@ -178,15 +210,25 @@ export default function Navbar() {
           <div className={`flex items-center ${isExpanded ? 'flex-row space-x-1' : 'flex-col space-y-1'}`}>
             {nav.menubar.map((item) => {
               const IconComponent = item.icon;
+              const active = isActivePath(pathname, item.url);
               return (
                 <a
                   key={item.name}
                   href={item.url}
                   aria-label={item.name}
+                  aria-current={active ? 'page' : undefined}
                   draggable={false}
-                  className="group relative w-9 h-9 rounded-xl bg-gray-900/60 hover:bg-gray-800 border border-gray-800/80 hover:border-pink-500/50 flex items-center justify-center text-gray-300 hover:text-white transition-colors shrink-0"
+                  className={`group relative w-9 h-9 rounded-xl border flex items-center justify-center transition-colors shrink-0 ${
+                    active
+                      ? 'bg-pink-600 border-pink-500 text-white shadow-[0_0_14px_rgba(236,72,153,0.55)]'
+                      : 'bg-gray-900/60 hover:bg-gray-800 border-gray-800/80 hover:border-pink-500/50 text-gray-300 hover:text-white'
+                  }`}
                 >
-                  {IconComponent && <IconComponent className="w-4 h-4 text-pink-400" />}
+                  {IconComponent && (
+                    <IconComponent
+                      className={`w-4 h-4 transition-colors ${active ? 'text-white' : 'text-pink-400'}`}
+                    />
+                  )}
 
                   {!isExpanded && (
                     <span className="absolute left-12 px-2.5 py-1 rounded-lg bg-gray-900 border border-gray-800 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-50">

@@ -6,56 +6,45 @@ import Preload from './pre';
 const MIN_PRELOAD_MS = 1200; // preloader tampil minimal sekian milidetik
 const MAX_PRELOAD_MS = 4000; // batas atas supaya tidak menunggu selamanya
 
-// Pola kotak-kotak hitam & pink. Kotak 40px; pola bergeser pelan dan semua lapisan
-// memakai kecepatan sama sehingga garis dan kotak tetap sejajar.
-const CELL = 40;
-const TILE = CELL * 2;
-
-const checker = (a) => `repeating-conic-gradient(rgba(236,72,153,${a}) 0% 25%, transparent 0% 50%)`;
-const lines = (a) =>
-  `linear-gradient(to right, rgba(236,72,153,${a}) 1px, transparent 1px), linear-gradient(to bottom, rgba(236,72,153,${a}) 1px, transparent 1px)`;
-
-const FADE_MASK = 'radial-gradient(ellipse 85% 75% at 50% 35%, #000 25%, transparent 80%)';
+// Latar belakang sama seperti Link.jsx: grid halus + gumpalan gradient (pink, indigo, fuchsia)
+// yang melayang pelan. Grid memudar ke tepi layar lewat mask radial.
+const GRID_COLOR = 'rgba(255,255,255,0.04)';
+const GRID_MASK = 'radial-gradient(ellipse at center, black 30%, transparent 75%)';
 
 function Backdrop() {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <style>{`
-        @keyframes lay-drift {
-          from { background-position: 0 0, 0 0, 0 0; }
-          to { background-position: ${TILE}px ${TILE}px, ${TILE}px ${TILE}px, ${TILE}px ${TILE}px; }
+        @keyframes lay-float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(24px, -30px) scale(1.08); }
         }
-        .lay-grid { animation: lay-drift 40s linear infinite; }
+        @keyframes lay-float-alt {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-28px, 26px) scale(1.1); }
+        }
+        .lay-float { animation: lay-float 14s ease-in-out infinite; }
+        .lay-float-alt { animation: lay-float-alt 17s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .lay-grid { animation: none; }
+          .lay-float, .lay-float-alt { animation: none; }
         }
       `}</style>
 
-      {/* Cahaya pink dari atas */}
+      {/* Grid halus, memudar ke tepi */}
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(60rem 28rem at 50% -8%, rgba(236,72,153,0.18), transparent 70%), radial-gradient(34rem 26rem at 100% 100%, rgba(217,70,239,0.08), transparent 70%)',
+          backgroundImage: `linear-gradient(${GRID_COLOR} 1px, transparent 1px), linear-gradient(90deg, ${GRID_COLOR} 1px, transparent 1px)`,
+          backgroundSize: '44px 44px',
+          maskImage: GRID_MASK,
+          WebkitMaskImage: GRID_MASK,
         }}
       />
 
-      {/* Kotak-kotak + garis tipis, memudar ke tepi */}
-      <div
-        className="lay-grid absolute inset-0"
-        style={{
-          backgroundImage: `${checker(0.05)}, ${lines(0.09)}`,
-          backgroundSize: `${TILE}px ${TILE}px, ${CELL}px ${CELL}px, ${CELL}px ${CELL}px`,
-          maskImage: FADE_MASK,
-          WebkitMaskImage: FADE_MASK,
-        }}
-      />
-
-      {/* Vignette: tepi layar menggelap supaya konten tetap terbaca */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse at center, transparent 45%, rgba(3,7,18,0.85) 100%)' }}
-      />
+      {/* Gumpalan gradient yang melayang */}
+      <div className="lay-float absolute -top-24 -left-24 h-80 w-80 rounded-full bg-pink-600/25 blur-3xl" />
+      <div className="lay-float-alt absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-600/25 blur-3xl" />
+      <div className="lay-float absolute -bottom-32 left-1/4 h-96 w-96 rounded-full bg-fuchsia-600/15 blur-3xl" />
     </div>
   );
 }

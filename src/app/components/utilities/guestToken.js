@@ -1,12 +1,8 @@
-// Simpan di: src/utils/guestToken.js (sesuaikan path import di App.jsx)
-
 const API_ORIGIN = 'https://api-mfikria.vercel.app';
 const API_BASE = `${API_ORIGIN}`;
 const STORAGE_KEY = 'guest_session_mfikria';
-// Token backend berlaku 24 jam (GUEST_TOKEN_TTL_MS), minta ulang sedikit lebih awal
 const MAX_AGE_MS = 23 * 60 * 60 * 1000;
 
-// Baca sesi guest dari sessionStorage. null jika belum ada / sudah terlalu lama.
 export function getGuestSession() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
@@ -20,8 +16,6 @@ export function getGuestSession() {
   }
 }
 
-// Minta guest token ke backend (tanpa login). Dipanggil berkali-kali pun hanya 1 request:
-// kalau sudah ada, pakai yang tersimpan; kalau sedang berjalan, tunggu request yang sama.
 let inflight = null;
 export function ensureGuestToken() {
   const existing = getGuestSession();

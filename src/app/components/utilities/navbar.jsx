@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HiHome, HiFolder, HiNewspaper, HiHeart, HiVideoCamera, HiShoppingBag } from 'react-icons/hi';
 import { FaGithub } from 'react-icons/fa';
+import { IoIosPricetags } from "react-icons/io";
 
 const nav = {
   logo: "mfikria",
@@ -10,6 +11,7 @@ const nav = {
     { name: "Blog", url: "/blog", icon: HiNewspaper },
     { name: "My Hobbies", url: "/hobbies", icon: HiHeart },
     { name: "Video", url: "/video", icon: HiVideoCamera },
+    { name: "Jasa", url: "/jasa", icon: IoIosPricetags },
     { name: "Store", url: "/store", icon: HiShoppingBag }
   ],
   github_button: {

@@ -4,34 +4,60 @@ import { format } from 'date-fns'
 import Layout from '../layout'
 import NotFound from '../notFound'
 import { FaGithub, FaCodeBranch, FaStar, FaEye, FaCalendarAlt } from 'react-icons/fa'
+import { apiFetch } from '../../libs/Mfikriaapi'
+import { ensureGuestToken } from '../components/utilities/guestToken'
 
 export const ProjectParams = () => {
   const { id } = useParams()
   const [data, setData] = useState(null)
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false) // API error (bukan 404): tampilkan pesan, bukan NotFound
 
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [resRepo, resEvents] = await Promise.all([
-          fetch(`https://api.github.com/repos/dodokjr/${id}`),
-          fetch(`https://api.github.com/repos/dodokjr/${id}/events`)
-        ])
-        
-        const repoBody = await resRepo.json()
-        const eventsBody = await resEvents.json()
+    let active = true // cegah setState setelah unmount / id berganti
 
+    const fetchAll = async () => {
+      setLoading(true)
+      setFailed(false)
+      try {
+        // Lewat backend (bukan api.github.com langsung) supaya:
+        // - memakai guest token yang sama (apiFetch menempel ?query=&tgl=)
+        // - kunjungan ke detail repo tercatat di GuestTokens_Params (action: github-repo)
+        // - tidak kena batas 60 request/jam GitHub dari browser
+        // Pastikan token ada dulu, supaya dua request paralel di bawah tidak membuat token ganda.
+        await ensureGuestToken().catch(() => null)
+
+        const repoPath = `/v2/github/dodokjr/repos/${encodeURIComponent(id)}`
+        const [resRepo, resEvents] = await Promise.all([
+          apiFetch(repoPath),
+          apiFetch(`${repoPath}/events`),
+        ])
+
+        const repoBody = resRepo.ok ? await resRepo.json().catch(() => null) : null
+        const eventsBody = resEvents.ok ? await resEvents.json().catch(() => null) : null
+
+        if (!active) return
+        if (!resRepo.ok && resRepo.status !== 404) setFailed(true) // 429 / 502 / dll
         setData(repoBody)
-        setEvents(eventsBody)
+        // Aktivitas gagal dimuat tidak membuat seluruh halaman 404: tabel tampil kosong
+        setEvents(Array.isArray(eventsBody) ? eventsBody : [])
       } catch (error) {
-        console.error("Gagal mengambil data GitHub:", error)
+        console.error('Gagal mengambil data GitHub:', error)
+        if (active) {
+          setFailed(true)
+          setData(null)
+          setEvents([])
+        }
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
 
     fetchAll()
+    return () => {
+      active = false
+    }
   }, [id])
 
   if (loading) {
@@ -51,7 +77,18 @@ export const ProjectParams = () => {
     )
   }
 
-  if (data?.message || events?.message || !data) {
+  if (failed) {
+    return (
+      <Layout>
+        <div className="mx-auto mt-20 max-w-sm text-center">
+          <p className="text-lg font-semibold text-white">Data repositori tidak bisa dimuat</p>
+          <p className="mt-1 text-sm text-gray-400">API sedang sibuk atau tidak merespons. Coba lagi sebentar lagi.</p>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (!data || data.message) {
     return <NotFound />
   }
 

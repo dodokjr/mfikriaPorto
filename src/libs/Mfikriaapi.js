@@ -155,11 +155,6 @@ export function ensureGuestToken() {
   return pending;
 }
 
-/* ========================= apiFetch ========================= */
-// Pakai seperti fetch biasa: apiFetch('/v2/github/dodokjr/repos')
-// - path relatif ditambah API_ORIGIN
-// - ?query=&tgl= ditempel otomatis (tidak memicu preflight CORS)
-// - kalau dibalas 401 (expired / invalid), buat token baru lalu ulangi 1x
 
 export async function apiFetch(path, options = {}, retry = true) {
   const url = /^https?:\/\//i.test(path) ? path : `${API_ORIGIN}${path}`;

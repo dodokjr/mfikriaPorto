@@ -1,28 +1,54 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 export default function InstagramFeed({ api }) {
-  const [loadingMap, setLoadingMap] = useState({})
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [modalImageLoaded, setModalImageLoaded] = useState(false)
+  const [loaded, setLoaded] = useState({})
+  const [active, setActive] = useState(null) // index gambar yang dibuka
+  const [modalLoaded, setModalLoaded] = useState(false)
 
-  if (!api || !Array.isArray(api)) {
+  const items = Array.isArray(api) ? api : null
+  const total = items?.length || 0
+
+  const open = (i) => {
+    setModalLoaded(false)
+    setActive(i)
+  }
+  const close = () => setActive(null)
+  const touch = useRef(null)
+
+  const go = useCallback(
+    (dir) => {
+      setModalLoaded(false)
+      setActive((i) => (i === null ? i : (i + dir + total) % total))
+    },
+    [total]
+  )
+
+  // Keyboard: Esc tutup, panah kiri/kanan pindah gambar. Kunci scroll saat modal terbuka.
+  useEffect(() => {
+    if (active === null) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') close()
+      if (e.key === 'ArrowRight') go(1)
+      if (e.key === 'ArrowLeft') go(-1)
+    }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [active, go])
+
+  // Loading
+  if (!items) {
     return (
-      <section className="bg-gray-950 py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-block skeleton h-6 w-28 rounded-full mb-3 bg-gray-800"></div>
-            <div className="mx-auto skeleton h-8 w-48 rounded-lg mb-2 bg-gray-800"></div>
-            <div className="mx-auto skeleton h-4 w-64 rounded-lg bg-gray-800"></div>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="flex flex-col bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                <div className="skeleton h-64 w-full bg-gray-800 animate-pulse"></div>
-                <div className="p-5 flex flex-col gap-2">
-                  <div className="skeleton h-3 w-20 rounded bg-gray-800"></div>
-                  <div className="skeleton h-5 w-32 rounded bg-gray-800"></div>
-                </div>
-              </div>
+      <section className="bg-neutral-950 py-20">
+        <div className="mx-auto max-w-6xl px-5">
+          <div className="mb-10 h-8 w-40 animate-pulse rounded-lg bg-white/10" />
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, n) => (
+              <div key={n} className="aspect-square animate-pulse rounded-2xl bg-white/10" />
             ))}
           </div>
         </div>
@@ -30,141 +56,159 @@ export default function InstagramFeed({ api }) {
     )
   }
 
-  const handleImageLoad = (index) => {
-    setLoadingMap((prev) => ({ ...prev, [index]: true }))
-  }
+  const current = active !== null ? items[active] : null
 
-  const handleOpenModal = (r) => {
-    setModalImageLoaded(false)
-    setSelectedImage(r)
+  // Swipe di HP: geser kiri/kanan = pindah foto, geser ke bawah = tutup
+  const onTouchStart = (e) => {
+    const t = e.touches[0]
+    touch.current = { x: t.clientX, y: t.clientY }
   }
+  const onTouchEnd = (e) => {
+    if (!touch.current) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - touch.current.x
+    const dy = t.clientY - touch.current.y
+    touch.current = null
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1)
+    else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) close()
+  }
+  const profileUrl = items.find((r) => r.url_Profile)?.url_Profile
 
   return (
-    <section className="bg-gray-950 py-16 text-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
-        <div className="text-center mb-12">
-          <span className="text-xs font-semibold tracking-wider text-pink-500 uppercase bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/20">
-            Galeri Sosial
-          </span>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl text-white">
-            Instagram Feed
-          </h2>
-          <p className="mt-2 text-sm text-gray-400">
-            Klik pada gambar untuk melihat tampilan penuh (full screen) dengan efek pemuatan.
-          </p>
+    <section className="bg-neutral-950 py-20 text-white">
+      <div className="mx-auto max-w-6xl px-5">
+        {/* Header */}
+        <div className="mb-10 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Gallery</h2>
+            <p className="mt-2 text-sm text-neutral-400">Potongan momen dari keseharian saya.</p>
+          </div>
+          {profileUrl && (
+            <a
+              href={profileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-sm font-medium text-pink-400 transition-colors hover:text-pink-300"
+            >
+              @fkri__17 →
+            </a>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {api.map((r, i) => (
-            <div
+        {/* Grid */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          {items.map((r, i) => (
+            <button
               key={i}
-              className="group relative flex flex-col overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 transition-all duration-300 hover:border-pink-500/50 hover:shadow-xl hover:shadow-pink-500/5"
+              type="button"
+              onClick={() => open(i)}
+              className="group relative aspect-square overflow-hidden rounded-2xl bg-white/5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
             >
-              <div 
-                className="relative h-64 w-full overflow-hidden bg-gray-800 cursor-pointer"
-                onClick={() => handleOpenModal(r)}
-              >
-                {!loadingMap[i] && (
-                  <div className="absolute inset-0 skeleton w-full h-full bg-gray-800 animate-pulse z-10"></div>
-                )}
-                
-                <img
-                  alt={r.caption || "Instagram Feed Post"}
-                  src={r.url_Image}
-                  onLoad={() => handleImageLoad(i)}
-                  className={`h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 ${
-                    loadingMap[i] ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                  <span className="px-3 py-1.5 text-xs font-semibold text-white bg-gray-900/80 border border-gray-700 rounded-full backdrop-blur-md">
-                    Full Screen
-                  </span>
-                </div>
-              </div>
+              {!loaded[i] && <div className="absolute inset-0 animate-pulse bg-white/10" />}
 
-              <div className="flex flex-col flex-grow p-5 justify-between">
-                <div>
-                  <a href={r.url_Profile || "#"} target="_blank" rel="noopener noreferrer">
-                    <p className="text-xs font-semibold tracking-wider text-pink-400 mb-1 hover:text-pink-300 transition-colors">
-                      @fkri__17
-                    </p>
-                    <h3 className="text-base font-bold text-white tracking-tight line-clamp-1 hover:text-pink-400 transition-colors">
-                      {r.name || "M Fikri A"}
-                    </h3>
-                  </a>
-                </div>
+              <img
+                src={r.url_Image}
+                alt={r.caption || 'Foto galeri'}
+                loading="lazy"
+                onLoad={() => setLoaded((p) => ({ ...p, [i]: true }))}
+                className={`h-full w-full object-cover transition duration-500 group-hover:scale-105 ${
+                  loaded[i] ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
 
-                {r.caption && (
-                  <p className="mt-2 text-xs text-gray-400 line-clamp-2">
-                    {r.caption}
-                  </p>
-                )}
+              {/* Overlay caption saat hover */}
+              <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/70 via-black/0 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                <p className="line-clamp-2 text-sm text-white">{r.caption || r.name}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
-
-        {/* Modal Full Screen dengan Efek Skeleton */}
-        {selectedImage && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-2 sm:p-6"
-            onClick={() => setSelectedImage(null)}
-          >
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-50 p-3 rounded-full bg-gray-900/80 border border-gray-800 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-
-            <div 
-              className="relative w-full h-full flex flex-col items-center justify-center max-w-7xl mx-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative flex-grow w-full h-full flex items-center justify-center overflow-hidden py-10">
-                
-                {/* Efek Skeleton / Loading pada Modal */}
-                {!modalImageLoaded && (
-                  <div className="absolute inset-10 skeleton w-auto h-auto bg-gray-800 animate-pulse rounded-2xl flex items-center justify-center">
-                    <span className="text-xs text-gray-400 font-medium tracking-wider">Memuat gambar...</span>
-                  </div>
-                )}
-
-                <img
-                  src={selectedImage.url_Image}
-                  alt={selectedImage.caption || "Full Screen Image"}
-                  onLoad={() => setModalImageLoaded(true)}
-                  className={`max-h-[85vh] max-w-full w-auto h-auto object-contain rounded-lg shadow-2xl transition-opacity duration-300 ${
-                    modalImageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-              </div>
-
-              <div className="w-full text-center pb-2">
-                <p className="text-sm font-medium text-white">{selectedImage.caption || selectedImage.name || "M Fikri A"}</p>
-                {selectedImage.url_Profile && (
-                  <a
-                    href={selectedImage.url_Profile}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-2 text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors"
-                  >
-                    Kunjungi Profil Instagram &rarr;
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
+
+      {/* Lightbox */}
+      {current && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={close}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Tutup"
+            className="absolute right-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-lg text-white backdrop-blur transition hover:bg-white/20"
+          >
+            ✕
+          </button>
+
+          {total > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Sebelumnya"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  go(-1)
+                }}
+                className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-white/20 sm:left-6 sm:flex"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Berikutnya"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  go(1)
+                }}
+                className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-white/20 sm:right-6 sm:flex"
+              >
+                →
+              </button>
+            </>
+          )}
+
+          <figure className="flex max-h-full max-w-5xl flex-col items-center pt-12" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex min-h-[30vh] min-w-[60vw] items-center justify-center sm:min-w-[30vw]">
+              {!modalLoaded && <div className="absolute inset-0 animate-pulse rounded-2xl bg-white/10" />}
+              <img
+                key={active}
+                src={current.url_Image}
+                alt={current.caption || 'Foto galeri'}
+                onLoad={() => setModalLoaded(true)}
+                className={`max-h-[78vh] w-auto max-w-full rounded-xl object-contain transition-opacity duration-300 ${
+                  modalLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </div>
+
+            <figcaption className="mt-4 pb-2 text-center">
+              {(current.caption || current.name) && (
+                <p className="text-sm text-neutral-200">{current.caption || current.name}</p>
+              )}
+              <p className="mt-1 text-xs text-neutral-500">
+                {active + 1} / {total}
+                {current.url_Profile && (
+                  <>
+                    {' · '}
+                    <a
+                      href={current.url_Profile}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-pink-400 hover:text-pink-300"
+                    >
+                      Lihat di Instagram
+                    </a>
+                  </>
+                )}
+              </p>
+            </figcaption>
+          </figure>
+        </div>
+      )}
     </section>
   )
 }

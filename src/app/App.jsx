@@ -5,7 +5,9 @@ import Loading from './components/utilities/Loading';
 import Benner from './components/utilities/Benner.jsx';
 import Home from './components/home/home';
 import { HiSparkles, HiX } from 'react-icons/hi';
-import { ensureGuestToken } from './components/utilities/guestToken.js'; // sesuaikan path dengan lokasi file guestToken.js
+import { ensureGuestToken } from './components/utilities/guestToken.js';
+import CardSertifikat from './components/utilities/Cardsertifikat.jsx';
+// sesuaikan path dengan lokasi file guestToken.js
 
 // Bagian di bawah layar pertama dimuat belakangan (code splitting),
 // jadi bundle awal lebih kecil dan halaman cepat tampil.
@@ -118,6 +120,7 @@ function App() {
             <TimeLine />
             <HomeProject api={data} />
             <SectionStar />
+            <CardSertifikat />
             <BlogHome api={data} />
             <FeedbackSection />
             <Contac api={data} />

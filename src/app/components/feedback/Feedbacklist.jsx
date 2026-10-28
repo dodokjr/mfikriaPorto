@@ -8,7 +8,7 @@ import { TYPES } from '../../../libs/Feedbackconfig';
 const FILTERS = [{ key: '', label: 'Semua' }, ...Object.entries(TYPES).map(([key, t]) => ({ key, label: t.label }))];
 
 // compact = dipakai di beranda (tanpa jarak atas ekstra)
-export default function FeedbackList({ items, status, hasMore, loadingMore, filter, onFilterChange, onLoadMore, onRetry, compact = false }) {
+export default function FeedbackList({ items, status, hasMore, loadingMore, filter, onFilterChange, onLoadMore, onRetry, onReplied, compact = false }) {
   return (
     <>
       {/* Filter */}
@@ -66,7 +66,7 @@ export default function FeedbackList({ items, status, hasMore, loadingMore, filt
         ) : (
           <div className="space-y-3">
             {items.map((item) => (
-              <FeedbackItem key={item.id} item={item} />
+              <FeedbackItem key={item.id} item={item} onReplied={onReplied} />
             ))}
             {hasMore && (
               <div className="pt-2 text-center">

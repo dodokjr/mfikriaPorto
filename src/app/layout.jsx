@@ -2,6 +2,8 @@ import React, { Suspense, useEffect, useRef, useState } from 'react';
 import Navbar from './components/utilities/navbar';
 import Footer from './components/utilities/footer';
 import Preload from './pre';
+import { useLocation } from 'react-router-dom';
+import { ensureGuestToken, trackGuestPage } from './components/utilities/guestToken';
 
 const MIN_PRELOAD_MS = 1200; // preloader tampil minimal sekian milidetik
 const MAX_PRELOAD_MS = 4000; // batas atas supaya tidak menunggu selamanya
@@ -90,15 +92,21 @@ function PageLoader({ onToggle }) {
   );
 }
 
+// Guest token: satu token & userId per sesi (POST /guest-token).
+// Tiap pindah halaman dicatat lewat POST /guest-token/:scope (tab GuestTokens_Params),
+// supaya tahu guest itu membuka halaman apa saja.
 export default function Layout({ children }) {
+  const { pathname } = useLocation();
   const [load, setLoad] = useState(true);
   const [rendering, setRendering] = useState(false); // true selama fallback Suspense tampil
   const contentRef = useRef(null);
 
-  // Preloader: tampil minimal MIN_PRELOAD_MS dan menunggu halaman selesai dimuat
-  // (maksimal MAX_PRELOAD_MS). Efek ini hanya berjalan sekali.
+  // Preloader: tampil minimal MIN_PRELOAD_MS, menunggu halaman selesai dimuat
+  // DAN guest token siap (berhasil atau gagal), maksimal MAX_PRELOAD_MS.
+  // Efek ini hanya berjalan sekali.
   useEffect(() => {
     let finished = false;
+    let cancelled = false;
     const finish = () => {
       if (!finished) {
         finished = true;
@@ -108,21 +116,41 @@ export default function Layout({ children }) {
 
     const start = performance.now();
     let minTimer = 0;
-    const onReady = () => {
-      minTimer = setTimeout(finish, Math.max(0, MIN_PRELOAD_MS - (performance.now() - start)));
-    };
+    let onLoad = null;
 
-    if (document.readyState === 'complete') onReady();
-    else window.addEventListener('load', onReady, { once: true });
+    const pageLoaded = new Promise((resolve) => {
+      if (document.readyState === 'complete') resolve();
+      else {
+        onLoad = resolve;
+        window.addEventListener('load', onLoad, { once: true });
+      }
+    });
+
+    const tokenReady = ensureGuestToken().catch((error) => {
+      console.error('guest-token:', error.message);
+      return null; // gagal: halaman tetap tampil
+    });
+
+    Promise.all([pageLoaded, tokenReady]).then(() => {
+      if (cancelled) return;
+      minTimer = setTimeout(finish, Math.max(0, MIN_PRELOAD_MS - (performance.now() - start)));
+    });
     const maxTimer = setTimeout(finish, MAX_PRELOAD_MS);
 
     return () => {
+      cancelled = true;
       finished = true;
       clearTimeout(minTimer);
       clearTimeout(maxTimer);
-      window.removeEventListener('load', onReady);
+      if (onLoad) window.removeEventListener('load', onLoad);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Catat halaman yang dibuka (jalan lagi setiap pathname berubah; halaman di luar daftar scope diabaikan)
+  useEffect(() => {
+    trackGuestPage(pathname);
+  }, [pathname]);
 
   // Cegah scroll saat preloader aktif, lalu kembalikan nilai awal (bukan dipaksa 'unset')
   useEffect(() => {

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Layout from "./layout";
 import { GitHubCalendar } from 'react-github-calendar';
 import CardRepos from './components/project/cardRepos';
+import ProfileGithub from './components/project/Profilegithub';
+import { ensureGuestToken } from './components/utilities/guestToken';
 import { apiFetch } from '../libs/Mfikriaapi';
 
 export default function ProjectApp() {
@@ -11,12 +13,9 @@ export default function ProjectApp() {
 
   useEffect(() => {
     let active = true; // cegah setState setelah komponen di-unmount
-
-    // apiFetch otomatis:
-    // - baca guest token dari sessionStorage dan tanya backend (/guest-token/status) apakah masih berlaku
-    // - kalau tidak valid / lewat 24 jam, buat token baru lewat /guest-token
-    // - tempel ?query=&tgl= ke URL, dan kalau dibalas 401 buat token baru lalu ulangi 1x
-    apiFetch("/v2/github/dodokjr/repos")
+    ensureGuestToken()
+      .catch(() => null)
+      .then(() => apiFetch("/v2/github/dodokjr/repos"))
       .then(async (res) => {
         const body = await res.json().catch(() => null);
         if (!res.ok) throw new Error((body && body.message) || "Gagal mengambil data dari API");
@@ -62,7 +61,9 @@ export default function ProjectApp() {
           </p>
         </div>
 
-        {/* GitHub Calendar Section */}
+        {/* Profil GitHub */}
+        <ProfileGithub />
+
         <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-slate-200 mb-6 text-center">
             Kontribusi GitHub
@@ -113,16 +114,6 @@ export default function ProjectApp() {
               className="w-full max-w-md h-auto object-contain"
               src="https://denvercoder1-github-readme-stats.vercel.app/api/top-langs/?username=dodokjr&langs_count=8&layout=compact&theme=react&border_color=00083B&bg_color=00083B&title_color=DAD0FE&icon_color=F5E572"
               alt="Dodokjr Top Languages"
-              loading="lazy"
-            />
-          </div>
-
-          {/* Activity Graph */}
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-4 flex justify-center hover:border-slate-700 transition">
-            <img
-              className="w-full h-auto object-contain"
-              src="https://github-readme-activity-graph.vercel.app/graph?username=dodokjr&custom_title=Dodokjr%27s%20GitHub%20Activity%20Graph&bg_color=00083B&color=6E49F5&line=6E49F5&point=6E49F5&area_color=0000&title_color=DAD0FE&area=true"
-              alt="Dodokjr GitHub Activity Graph"
               loading="lazy"
             />
           </div>

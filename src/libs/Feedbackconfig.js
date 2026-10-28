@@ -15,10 +15,14 @@ const API_PATH = (
 
 export const FEEDBACK_URL = `${API_ORIGIN}${API_PATH}/feedback`;
 
-export const PAGE_SIZE = 10;
+export const PAGE_SIZE = 5; // jumlah komentar utama per halaman (sama dengan default backend)
 export const MIN_MESSAGE = 5; // sama dengan backend
 export const MAX_MESSAGE = 1000;
 export const MAX_NAME = 40;
+
+// Kunci penyimpanan browser tempat hasil login (dashboardData) disimpan.
+// Di aplikasi ini tersimpan di Local storage dengan kunci "session". Dicari di localStorage lalu sessionStorage.
+export const ADMIN_STORAGE_KEY = 'session';
 
 export const TYPES = {
   saran: {

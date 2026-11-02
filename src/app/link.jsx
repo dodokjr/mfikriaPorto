@@ -302,21 +302,26 @@ export default function Link() {
         {/* Kilau gradient di tepi atas kartu */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-pink-500/70 to-transparent" />
 
-        {/* Toggle Dark / Light Mode */}
+        {/* Toggle Dark / Light Mode
+            z-30 + touch-manipulation: memastikan tombol berada di atas blok profil
+            (yang beranimasi transform & membentuk stacking context) sehingga mudah dipencet. */}
         <button
+          type="button"
           onClick={toggleTheme}
           aria-label={isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
           title={isDark ? 'Mode terang' : 'Mode gelap'}
-          className={`absolute top-4 right-4 w-10 h-10 rounded-full border flex items-center justify-center transition-all hover:scale-110 active:scale-95 ${c(
+          className={`absolute top-3 right-3 z-30 w-11 h-11 rounded-full border flex items-center justify-center cursor-pointer touch-manipulation transition-all hover:scale-110 active:scale-95 ${c(
             'bg-white/5 border-white/10 text-yellow-300 hover:bg-white/10',
             'bg-slate-900/5 border-slate-200 text-indigo-600 hover:bg-slate-900/10'
           )}`}
         >
-          {isDark ? <FaSun className="w-4 h-4" /> : <FaMoon className="w-4 h-4" />}
+          {isDark
+            ? <FaSun className="w-4 h-4 pointer-events-none" />
+            : <FaMoon className="w-4 h-4 pointer-events-none" />}
         </button>
 
         {/* Profile Image & Name */}
-        <div className="lf-fade-up flex flex-col items-center justify-center mb-6">
+        <div className="lf-fade-up flex flex-col items-center justify-center mb-6 pt-2">
           <div className="relative w-28 h-28 mb-5">
             {/* Cincin gradient berputar */}
             <div
@@ -406,6 +411,7 @@ export default function Link() {
               className={`absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-xl shadow-md bg-gradient-to-r from-pink-600 to-indigo-600 transition-transform duration-300 ease-out ${videoTab === 'video' ? 'translate-x-full' : 'translate-x-0'}`}
             />
             <button
+              type="button"
               onClick={() => handleSwitchVideoTab('youtube')}
               className={`relative z-10 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${videoTab === 'youtube' ? 'text-white' : mutedText}`}
             >
@@ -413,6 +419,7 @@ export default function Link() {
               <span>YouTube</span>
             </button>
             <button
+              type="button"
               onClick={() => handleSwitchVideoTab('video')}
               className={`relative z-10 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${videoTab === 'video' ? 'text-white' : mutedText}`}
             >
@@ -435,6 +442,7 @@ export default function Link() {
                 />
               ) : (
                 <button
+                  type="button"
                   onClick={() => setYtPlaying(true)}
                   aria-label="Putar video YouTube"
                   className="group absolute inset-0 w-full h-full"
@@ -481,6 +489,7 @@ export default function Link() {
         {/* Fitur Spill Jualan & Gallery */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <button
+            type="button"
             onClick={handleOpenShopModal}
             className={`py-3 px-4 rounded-2xl border text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 ${c(
               'bg-white/5 border-white/10 text-white hover:bg-white/10',
@@ -492,6 +501,7 @@ export default function Link() {
           </button>
 
           <button
+            type="button"
             onClick={handleOpenGalleryModal}
             className={`py-3 px-4 rounded-2xl border text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 ${c(
               'bg-white/5 border-white/10 text-white hover:bg-white/10',
@@ -505,6 +515,7 @@ export default function Link() {
 
         {/* Tombol Donasi */}
         <button
+          type="button"
           onClick={handleOpenDonationModal}
           className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-pink-600 via-fuchsia-600 to-indigo-600 hover:from-pink-500 hover:via-fuchsia-500 hover:to-indigo-500 text-xs font-bold text-white transition-all shadow-lg shadow-pink-600/30 flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95"
         >
@@ -570,6 +581,7 @@ export default function Link() {
             )}
 
             <button
+              type="button"
               onClick={handleCloseModal}
               className={`w-full py-3 px-4 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${closeBtn}`}
             >
@@ -633,6 +645,7 @@ export default function Link() {
             )}
 
             <button
+              type="button"
               onClick={handleCloseModal}
               className={`w-full py-3 px-4 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${closeBtn}`}
             >
@@ -687,6 +700,7 @@ export default function Link() {
                   <span className={`font-sans text-[11px] ${mutedText}`}>a.n. Muhammad Fikri</span>
                 </div>
                 <button
+                  type="button"
                   onClick={handleCopyRekening}
                   className={`px-3 py-2 rounded-xl border text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
                     copied
@@ -710,6 +724,7 @@ export default function Link() {
             </div>
 
             <button
+              type="button"
               onClick={handleCloseModal}
               className={`w-full py-3 px-4 rounded-2xl border text-sm font-bold transition-all active:scale-95 ${closeBtn}`}
             >
@@ -726,6 +741,7 @@ export default function Link() {
           className="lf-fade-in fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-zoom-out"
         >
           <button
+            type="button"
             onClick={handleCloseZoom}
             className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-pink-600 transition-colors shadow-lg"
           >
@@ -752,6 +768,7 @@ export default function Link() {
           className="lf-fade-in fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-zoom-out"
         >
           <button
+            type="button"
             onClick={handleCloseImageZoom}
             className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors shadow-lg"
           >

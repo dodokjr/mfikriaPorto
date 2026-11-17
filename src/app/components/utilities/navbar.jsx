@@ -23,6 +23,41 @@ const nav = {
 const EDGE_GAP = 8;        // jarak minimal sidebar dari tepi layar
 const DRAG_THRESHOLD = 5;  // gerakan minimal (px) supaya dianggap drag, bukan klik
 
+// ---------------------------------------------------------------
+// Penyimpanan status sidebar (buka/tutup)
+// 'local'   → tetap tersimpan walau tab/browser ditutup
+// 'session' → hanya berlaku selama tab ini terbuka
+// ---------------------------------------------------------------
+const STORAGE_TYPE = 'local'; // ganti ke 'session' jika ingin sessionStorage
+const SIDEBAR_KEY = 'navbar:sidebar-visible';
+
+const getStorage = () =>
+  STORAGE_TYPE === 'session' ? window.sessionStorage : window.localStorage;
+
+// State yang otomatis dibaca & ditulis ke storage.
+// Dibungkus try/catch karena storage bisa error (mode private, diblokir, penuh).
+function usePersistentBoolean(key, initial) {
+  const [value, setValue] = useState(() => {
+    if (typeof window === 'undefined') return initial;
+    try {
+      const saved = JSON.parse(getStorage().getItem(key));
+      return typeof saved === 'boolean' ? saved : initial;
+    } catch {
+      return initial;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      getStorage().setItem(key, JSON.stringify(value));
+    } catch {
+      /* abaikan: sidebar tetap berfungsi tanpa penyimpanan */
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
 // Samakan format path: huruf kecil, tanpa slash di akhir ("/Project/" -> "/project")
 const normalize = (p) => {
   const s = (p || '/').toLowerCase().replace(/\/+$/, '');
@@ -65,7 +100,8 @@ function Divider({ vertical }) {
 
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);      // false = vertikal, true = horizontal
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  // true = terbuka, false = tertutup; tersimpan di storage supaya tetap sama di tiap halaman
+  const [isSidebarVisible, setIsSidebarVisible] = usePersistentBoolean(SIDEBAR_KEY, true);
   const pathname = usePathname();
 
   const sidebarRef = useRef(null);
